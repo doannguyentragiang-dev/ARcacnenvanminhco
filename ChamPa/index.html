@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
 <script>
-// 1. CẢM ỨNG (Nguyên bản)
+// 1. CẢM ỨNG (Nguyên bản của bạn)
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -40,7 +40,7 @@ this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
 }
 });
 
-// 2. PHÁT HIỆN CỬ CHỈ (Nguyên bản)
+// 2. PHÁT HIỆN CỬ CHỈ (Nguyên bản của bạn)
 AFRAME.registerComponent('gesture-detector', {
 init: function () {
 this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
@@ -68,11 +68,11 @@ this.startSpread = spread;
 }
 });
 
-// 3. TÁCH NỀN VIDEO (Nguyên bản 100% không cắt xén)
+// 3. TÁCH NỀN VIDEO (Nguyên bản của bạn)
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
-color: {type: 'vec3', default: {x: 0.0, y: 0.63, z: 1.0}},
+color: {type: 'vec3', default: {x: 0.0, y: 1.0, z: 0.0}}, // Xanh lá
 similarity: {default: 0.25, type: 'number'}
 },
 init: function() {
@@ -122,7 +122,7 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 
 <body>
 <div id="start-screen">
-<div style="font-size: 14px; color: #ccc;">Đang tải dữ liệu Champa...</div>
+<div style="font-size: 14px; color: #ccc;">Đang tải dữ liệu...</div>
 <button id="start-btn">SẴN SÀNG</button>
 </div>
 <div id="info-btn" class="ui-btn">i</div>
@@ -132,77 +132,76 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 <div style="color:white; margin-top:10px">(Chạm để đóng)</div>
 </div>
 
-<a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
+<a-scene mindar-image="imageTargetSrc: ./champa.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
 color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
 gesture-detector>
-
 <a-assets>
-    <video id="v1" src="./champa1.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-    <video id="v2" src="./champa2.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-    <video id="v3" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-    <video id="v4" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-    <video id="v5" src="./champa5.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-    
-    <a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
-    <a-asset-item id="m7" src="./champa7.glb"></a-asset-item>
-    <a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
-    <a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
-    <a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
+<video id="v1" src="./champa1.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v2" src="./champa2.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v3" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v4" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v5" src="./champa5.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+
+<a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
+<a-asset-item id="m7" src="./champa7.glb"></a-asset-item>
+<a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
+<a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
+<a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
 <a-entity id="t0" mindar-image-target="targetIndex: 0">
-    <a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v1; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v1"></a-plane>
 </a-entity>
 
 <a-entity id="t1" mindar-image-target="targetIndex: 1">
-    <a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v2; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v2"></a-plane>
 </a-entity>
 
 <a-entity id="t2" mindar-image-target="targetIndex: 2">
-    <a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v3; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v3"></a-plane>
 </a-entity>
 
 <a-entity id="t3" mindar-image-target="targetIndex: 3">
-    <a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v4; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v4"></a-plane>
 </a-entity>
 
 <a-entity id="t4" mindar-image-target="targetIndex: 4">
-    <a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v5; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v5"></a-plane>
 </a-entity>
 
 <a-entity id="t5" mindar-image-target="targetIndex: 5">
-    <a-entity gltf-model="#m6" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m6" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t6" mindar-image-target="targetIndex: 6">
-    <a-entity gltf-model="#m7" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m7" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t7" mindar-image-target="targetIndex: 7">
-    <a-text value="Sap hoan thien" color="white" align="center" scale="2 2 2"></a-text>
+<a-text value="Sap hoan thien" color="white" align="center" scale="2 2 2"></a-text>
 </a-entity>
 
 <a-entity id="t8" mindar-image-target="targetIndex: 8">
-    <a-entity gltf-model="#m9" rotation="90 0 0" scale="0.3 0.3 0.3" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t9" mindar-image-target="targetIndex: 9">
-    <a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 <a-entity id="t10" mindar-image-target="targetIndex: 10">
-    <a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t11" mindar-image-target="targetIndex: 11">
-    <a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t12" mindar-image-target="targetIndex: 12">
-    <a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 </a-scene>
@@ -232,67 +231,57 @@ let currentTargetIndex = -1;
 let isMuted = true;
 
 document.getElementById('start-btn').addEventListener('click', () => {
-    startScreen.style.display = 'none';
-    document.querySelectorAll('video').forEach(media => {
-        media.muted = true;
-        media.play().then(() => {
-            media.pause(); media.currentTime = 0;
-        }).catch(e => console.log(e));
-    });
+startScreen.style.display = 'none';
+document.querySelectorAll('video').forEach(media => {
+media.muted = true;
+media.play().then(() => {
+media.pause(); media.currentTime = 0;
+}).catch(e => console.log(e));
+});
 });
 
 muteBtn.addEventListener('click', () => {
-    isMuted = !isMuted;
-    muteBtn.innerText = isMuted ? '🔇' : '🔊';
-    document.querySelectorAll('video').forEach(media => {
-        media.muted = isMuted;
-    });
+isMuted = !isMuted;
+muteBtn.innerText = isMuted ? '🔇' : '🔊';
+document.querySelectorAll('video').forEach(media => {
+media.muted = isMuted;
+});
 });
 
 targetsData.forEach((item, index) => {
-    const entity = document.getElementById(item.id);
-    if (!entity) return;
+const entity = document.getElementById(item.id);
+entity.addEventListener('targetFound', () => {
+currentTargetIndex = index;
+infoBtn.style.display = 'flex';
+muteBtn.style.display = 'flex';
 
-    entity.addEventListener('targetFound', () => {
-        currentTargetIndex = index;
-        infoBtn.style.display = 'flex';
-        muteBtn.style.display = 'flex';
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) { vid.currentTime = 0; vid.play(); vid.muted = isMuted; }
+}
+});
 
-        if (item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if(vid) { 
-                vid.currentTime = 0; 
-                vid.play(); 
-                vid.muted = isMuted; 
-            }
-        }
-    });
-
-    entity.addEventListener('targetLost', () => {
-        infoBtn.style.display = 'none';
-        muteBtn.style.display = 'none';
-        
-        if (item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if(vid) vid.pause();
-        }
-    });
+entity.addEventListener('targetLost', () => {
+infoBtn.style.display = 'none';
+muteBtn.style.display = 'none';
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) vid.pause();
+}
+});
 });
 
 infoBtn.addEventListener('click', () => {
-    infoModal.style.display = 'flex';
-    document.querySelectorAll('video').forEach(m => m.pause());
+infoModal.style.display = 'flex';
+document.querySelectorAll('video').forEach(m => m.pause());
 });
 
 infoModal.addEventListener('click', () => {
-    infoModal.style.display = 'none';
-    if (currentTargetIndex !== -1) {
-        const item = targetsData[currentTargetIndex];
-        if(item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if (vid) vid.play();
-        }
-    }
+infoModal.style.display = 'none';
+if (currentTargetIndex !== -1) {
+const item = targetsData[currentTargetIndex];
+if(item.type === 'video') document.getElementById(item.mediaId).play();
+}
 });
 </script>
 </body>

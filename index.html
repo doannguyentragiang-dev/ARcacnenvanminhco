@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
 <script>
-// 1. CẢM ỨNG
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -40,7 +39,6 @@ this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
 }
 });
 
-// 2. PHÁT HIỆN CỬ CHỈ
 AFRAME.registerComponent('gesture-detector', {
 init: function () {
 this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
@@ -68,7 +66,6 @@ this.startSpread = spread;
 }
 });
 
-// 3. TÁCH NỀN VIDEO 
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -122,7 +119,7 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 
 <body>
 <div id="start-screen">
-<div style="font-size: 14px; color: #ccc;">Đang tải dữ liệu Champa...</div>
+<div style="font-size: 14px; color: #ccc;">Đang tải dữ liệu...</div>
 <button id="start-btn">SẴN SÀNG</button>
 </div>
 <div id="info-btn" class="ui-btn">i</div>
@@ -149,28 +146,31 @@ gesture-detector>
 <a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
 <a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
 <a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
+
+<img id="img10" src="./champa10a.png" crossorigin>
+<img id="img13" src="./champa13a.png" crossorigin>
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
 <a-entity id="t0" mindar-image-target="targetIndex: 0">
-<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v1; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v1"></a-plane>
 </a-entity>
 
 <a-entity id="t1" mindar-image-target="targetIndex: 1">
-<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v2; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v2"></a-plane>
 </a-entity>
 
 <a-entity id="t2" mindar-image-target="targetIndex: 2">
-<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v3; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v3"></a-plane>
 </a-entity>
 
 <a-entity id="t3" mindar-image-target="targetIndex: 3">
-<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v4; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v4"></a-plane>
 </a-entity>
 
 <a-entity id="t4" mindar-image-target="targetIndex: 4">
-<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v5; color: 0 1 0"></a-plane>
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v5"></a-plane>
 </a-entity>
 
 <a-entity id="t5" mindar-image-target="targetIndex: 5">
@@ -182,11 +182,11 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t7" mindar-image-target="targetIndex: 7">
-<a-entity gltf-model="#m9" rotation="90 0 0" scale="0.3 0.3 0.3" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t8" mindar-image-target="targetIndex: 8">
-<a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-plane src="#img10" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 <a-entity id="t9" mindar-image-target="targetIndex: 9">
@@ -198,25 +198,25 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t11" mindar-image-target="targetIndex: 11">
-<a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-plane src="#img13" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 </a-scene>
 
 <script>
 const targetsData = [
-{ id: 't0', type: 'video', mediaId: 'v1' },   // champa1
-{ id: 't1', type: 'video', mediaId: 'v2' },   // champa2
-{ id: 't2', type: 'video', mediaId: 'v3' },   // champa3
-{ id: 't3', type: 'video', mediaId: 'v4' },   // champa4
-{ id: 't4', type: 'video', mediaId: 'v5' },   // champa5
-{ id: 't5', type: '3d' },                     // champa6
-{ id: 't6', type: '3d' },                     // champa7
-{ id: 't7', type: '3d' },                     // champa9
-{ id: 't8', type: 'image' },                  // champa10
-{ id: 't9', type: '3d' },                     // champa11
-{ id: 't10', type: '3d' },                    // champa12
-{ id: 't11', type: 'image' }                  // champa13
+{ id: 't0', type: 'video', mediaId: 'v1' },
+{ id: 't1', type: 'video', mediaId: 'v2' },
+{ id: 't2', type: 'video', mediaId: 'v3' },
+{ id: 't3', type: 'video', mediaId: 'v4' },
+{ id: 't4', type: 'video', mediaId: 'v5' },
+{ id: 't5', type: '3d' },
+{ id: 't6', type: '3d' },
+{ id: 't7', type: '3d' },
+{ id: 't8', type: 'image' },
+{ id: 't9', type: '3d' },
+{ id: 't10', type: '3d' },
+{ id: 't11', type: 'image' }
 ];
 
 const startScreen = document.getElementById('start-screen');
@@ -227,67 +227,59 @@ let currentTargetIndex = -1;
 let isMuted = true;
 
 document.getElementById('start-btn').addEventListener('click', () => {
-    startScreen.style.display = 'none';
-    document.querySelectorAll('video').forEach(media => {
-        media.muted = true;
-        media.play().then(() => {
-            media.pause(); media.currentTime = 0;
-        }).catch(e => console.log(e));
-    });
+startScreen.style.display = 'none';
+document.querySelectorAll('video').forEach(media => {
+media.muted = true;
+media.play().then(() => {
+media.pause(); media.currentTime = 0;
+}).catch(e => console.log(e));
+});
 });
 
 muteBtn.addEventListener('click', () => {
-    isMuted = !isMuted;
-    muteBtn.innerText = isMuted ? '🔇' : '🔊';
-    document.querySelectorAll('video').forEach(media => {
-        media.muted = isMuted;
-    });
+isMuted = !isMuted;
+muteBtn.innerText = isMuted ? '🔇' : '🔊';
+document.querySelectorAll('video').forEach(media => {
+media.muted = isMuted;
+});
 });
 
 targetsData.forEach((item, index) => {
-    const entity = document.getElementById(item.id);
-    if (!entity) return;
+const entity = document.getElementById(item.id);
+if (!entity) return;
 
-    entity.addEventListener('targetFound', () => {
-        currentTargetIndex = index;
-        infoBtn.style.display = 'flex';
-        muteBtn.style.display = 'flex';
+entity.addEventListener('targetFound', () => {
+currentTargetIndex = index;
+infoBtn.style.display = 'flex';
+muteBtn.style.display = 'flex';
 
-        if (item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if(vid) { 
-                vid.currentTime = 0; 
-                vid.play(); 
-                vid.muted = isMuted; 
-            }
-        }
-    });
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) { vid.currentTime = 0; vid.play(); vid.muted = isMuted; }
+}
+});
 
-    entity.addEventListener('targetLost', () => {
-        infoBtn.style.display = 'none';
-        muteBtn.style.display = 'none';
-        
-        if (item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if(vid) vid.pause();
-        }
-    });
+entity.addEventListener('targetLost', () => {
+infoBtn.style.display = 'none';
+muteBtn.style.display = 'none';
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) vid.pause();
+}
+});
 });
 
 infoBtn.addEventListener('click', () => {
-    infoModal.style.display = 'flex';
-    document.querySelectorAll('video').forEach(m => m.pause());
+infoModal.style.display = 'flex';
+document.querySelectorAll('video').forEach(m => m.pause());
 });
 
 infoModal.addEventListener('click', () => {
-    infoModal.style.display = 'none';
-    if (currentTargetIndex !== -1) {
-        const item = targetsData[currentTargetIndex];
-        if(item.type === 'video') {
-            const vid = document.getElementById(item.mediaId);
-            if (vid) vid.play();
-        }
-    }
+infoModal.style.display = 'none';
+if (currentTargetIndex !== -1) {
+const item = targetsData[currentTargetIndex];
+if(item.type === 'video') document.getElementById(item.mediaId).play();
+}
 });
 </script>
 </body>

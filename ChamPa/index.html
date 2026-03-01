@@ -35,12 +35,10 @@ device-orientation-permission-ui="enabled: false">
 <a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
 <a-asset-item id="m7" src="./champa7.glb"></a-asset-item>
 <a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
+<a-asset-item id="m10" src="./champa10.glb"></a-asset-item>
 <a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
 <a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
 <a-asset-item id="m13" src="./champa13.glb"></a-asset-item>
-
-<!-- IMAGE -->
-<img id="img10" src="./champa10.png">
 
 </a-assets>
 
@@ -81,7 +79,7 @@ device-orientation-permission-ui="enabled: false">
 <a-entity gltf-model="#m7" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 8 - SẮP HOÀN THIỆN -->
+<!-- 8 -->
 <a-entity mindar-image-target="targetIndex: 7">
 <a-plane color="#222" height="1.5" width="1">
 <a-text 
@@ -101,12 +99,12 @@ position="0 0 0.01">
 
 <!-- 10 -->
 <a-entity mindar-image-target="targetIndex: 9">
-<a-plane src="#img10" material="shader: flat" height="1.5" width="1"></a-plane>
+<a-entity gltf-model="#m10" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 11 (đã thu nhỏ) -->
+<!-- 11 -->
 <a-entity mindar-image-target="targetIndex: 10">
-<a-entity gltf-model="#m11" rotation="90 0 0" scale="0.3 0.3 0.3"></a-entity>
+<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
 <!-- 12 -->
@@ -114,9 +112,9 @@ position="0 0 0.01">
 <a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 13 (MÔ HÌNH) -->
+<!-- 13 -->
 <a-entity mindar-image-target="targetIndex: 12">
-<a-entity gltf-model="#m13" rotation="90 0 0" scale="0.5 0.5 0.5"></a-entity>
+<a-entity gltf-model="#m13" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
 </a-scene>

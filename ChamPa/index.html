@@ -6,7 +6,6 @@
 
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
 <style>
 body { margin:0; overflow:hidden; }
@@ -15,7 +14,7 @@ body { margin:0; overflow:hidden; }
 
 <body>
 
-<a-scene 
+<a-scene
 mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no;"
 color-space="sRGB"
 renderer="colorManagement: true"
@@ -23,13 +22,6 @@ vr-mode-ui="enabled: false"
 device-orientation-permission-ui="enabled: false">
 
 <a-assets>
-
-<!-- VIDEO -->
-<video id="v1" src="./champa1.mp4" loop playsinline webkit-playsinline muted></video>
-<video id="v2" src="./champa2.mp4" loop playsinline webkit-playsinline muted></video>
-<video id="v3" src="./champa4.mp4" loop playsinline webkit-playsinline muted></video>
-<video id="v4" src="./champa4.mp4" loop playsinline webkit-playsinline muted></video>
-<video id="v5" src="./champa5.mp4" loop playsinline webkit-playsinline muted></video>
 
 <!-- 3D MODEL -->
 <a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
@@ -45,29 +37,19 @@ device-orientation-permission-ui="enabled: false">
 <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
 <!-- 1 -->
-<a-entity mindar-image-target="targetIndex: 0">
-<a-plane src="#v1" material="shader: flat" height="2" width="1.2"></a-plane>
-</a-entity>
+<a-entity mindar-image-target="targetIndex: 0"></a-entity>
 
 <!-- 2 -->
-<a-entity mindar-image-target="targetIndex: 1">
-<a-plane src="#v2" material="shader: flat" height="2" width="1.2"></a-plane>
-</a-entity>
+<a-entity mindar-image-target="targetIndex: 1"></a-entity>
 
 <!-- 3 -->
-<a-entity mindar-image-target="targetIndex: 2">
-<a-plane src="#v3" material="shader: flat" height="2" width="1.2"></a-plane>
-</a-entity>
+<a-entity mindar-image-target="targetIndex: 2"></a-entity>
 
 <!-- 4 -->
-<a-entity mindar-image-target="targetIndex: 3">
-<a-plane src="#v4" material="shader: flat" height="2" width="1.2"></a-plane>
-</a-entity>
+<a-entity mindar-image-target="targetIndex: 3"></a-entity>
 
 <!-- 5 -->
-<a-entity mindar-image-target="targetIndex: 4">
-<a-plane src="#v5" material="shader: flat" height="2" width="1.2"></a-plane>
-</a-entity>
+<a-entity mindar-image-target="targetIndex: 4"></a-entity>
 
 <!-- 6 -->
 <a-entity mindar-image-target="targetIndex: 5">
@@ -97,14 +79,14 @@ position="0 0 0.01">
 <a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 10 -->
+<!-- 10 (QUAN TRỌNG) -->
 <a-entity mindar-image-target="targetIndex: 9">
 <a-entity gltf-model="#m10" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 11 -->
+<!-- 11 (TĂNG LỚN RÕ RỆT) -->
 <a-entity mindar-image-target="targetIndex: 10">
-<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1"></a-entity>
+<a-entity gltf-model="#m11" rotation="90 0 0" scale="2 2 2"></a-entity>
 </a-entity>
 
 <!-- 12 -->
@@ -118,25 +100,6 @@ position="0 0 0.01">
 </a-entity>
 
 </a-scene>
-
-<script>
-document.querySelectorAll('a-entity[mindar-image-target]').forEach((target) => {
-
-target.addEventListener("targetFound", () => {
-const video = target.querySelector("video");
-if(video){
-video.currentTime = 0;
-video.play();
-}
-});
-
-target.addEventListener("targetLost", () => {
-const video = target.querySelector("video");
-if(video) video.pause();
-});
-
-});
-</script>
 
 </body>
 </html>

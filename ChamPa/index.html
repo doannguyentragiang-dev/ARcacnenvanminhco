@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 <title>AR Champa</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
@@ -149,6 +149,9 @@ gesture-detector>
 <a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
 <a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
 <a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
+
+<img id="img10" src="./champa10.png" crossorigin="anonymous">
+<img id="img13" src="./champa13.png" crossorigin="anonymous">
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -182,23 +185,27 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t7" mindar-image-target="targetIndex: 7">
-<a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-text value="Sap hoan thien" color="white" align="center" scale="2 2 2"></a-text>
 </a-entity>
 
 <a-entity id="t8" mindar-image-target="targetIndex: 8">
-<a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t9" mindar-image-target="targetIndex: 9">
-<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-plane src="#img10" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 <a-entity id="t10" mindar-image-target="targetIndex: 10">
-<a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
 <a-entity id="t11" mindar-image-target="targetIndex: 11">
-<a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+<a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t12" mindar-image-target="targetIndex: 12">
+<a-plane src="#img13" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
 </a-scene>
@@ -212,11 +219,12 @@ const targetsData = [
 { id: 't4', type: 'video', mediaId: 'v5' },
 { id: 't5', type: '3d' },
 { id: 't6', type: '3d' },
-{ id: 't7', type: '3d' },
-{ id: 't8', type: 'image' },
-{ id: 't9', type: '3d' },
+{ id: 't7', type: 'missing' },
+{ id: 't8', type: '3d' },
+{ id: 't9', type: 'image' },
 { id: 't10', type: '3d' },
-{ id: 't11', type: 'image' }
+{ id: 't11', type: '3d' },
+{ id: 't12', type: 'image' }
 ];
 
 const startScreen = document.getElementById('start-screen');
@@ -293,7 +301,10 @@ if (currentTargetIndex !== -1) {
 const item = targetsData[currentTargetIndex];
 if(item.type === 'video') {
 const vid = document.getElementById(item.mediaId);
-if (vid) vid.play();
+if (vid) {
+const p = vid.play();
+if (p !== undefined) { p.catch(e => {}); }
+}
 }
 }
 });

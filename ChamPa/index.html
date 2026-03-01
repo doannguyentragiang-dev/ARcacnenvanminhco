@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
 <script>
-// 1. CẢM ỨNG (Nguyên bản của bạn)
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -40,7 +39,6 @@ this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
 }
 });
 
-// 2. PHÁT HIỆN CỬ CHỈ (Nguyên bản của bạn)
 AFRAME.registerComponent('gesture-detector', {
 init: function () {
 this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
@@ -68,11 +66,10 @@ this.startSpread = spread;
 }
 });
 
-// 3. TÁCH NỀN VIDEO (Nguyên bản của bạn)
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
-color: {type: 'vec3', default: {x: 0.0, y: 1.0, z: 0.0}}, // Xanh lá
+color: {type: 'vec3', default: {x: 0.0, y: 1.0, z: 0.0}}, 
 similarity: {default: 0.25, type: 'number'}
 },
 init: function() {
@@ -104,7 +101,10 @@ transparent: true, side: THREE.DoubleSide, depthTest: false
 });
 this.el.getObject3D('mesh').material = this.material;
 },
-tick: function() { if (this.texture) this.texture.needsUpdate = true; }
+tick: function() { 
+if (!this.el.object3D.visible) return; 
+if (this.texture) this.texture.needsUpdate = true; 
+}
 });
 </script>
 
@@ -132,16 +132,17 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 <div style="color:white; margin-top:10px">(Chạm để đóng)</div>
 </div>
 
-<a-scene mindar-image="imageTargetSrc: ./champa.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
 color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
 gesture-detector>
+
 <a-assets>
-<video id="v1" src="./champa1.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-<video id="v2" src="./champa2.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-<video id="v3" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-<video id="v4" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
-<video id="v5" src="./champa5.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v1" src="./champa1.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted></video>
+<video id="v2" src="./champa2.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted></video>
+<video id="v3" src="./champa4.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted></video>
+<video id="v4" src="./champa4.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted></video>
+<video id="v5" src="./champa5.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted></video>
 
 <a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
 <a-asset-item id="m7" src="./champa7.glb"></a-asset-item>
@@ -181,26 +182,22 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t7" mindar-image-target="targetIndex: 7">
-<a-text value="Sap hoan thien" color="white" align="center" scale="2 2 2"></a-text>
-</a-entity>
-
-<a-entity id="t8" mindar-image-target="targetIndex: 8">
 <a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
-<a-entity id="t9" mindar-image-target="targetIndex: 9">
+<a-entity id="t8" mindar-image-target="targetIndex: 8">
 <a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
-<a-entity id="t10" mindar-image-target="targetIndex: 10">
+<a-entity id="t9" mindar-image-target="targetIndex: 9">
 <a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
-<a-entity id="t11" mindar-image-target="targetIndex: 11">
+<a-entity id="t10" mindar-image-target="targetIndex: 10">
 <a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
 </a-entity>
 
-<a-entity id="t12" mindar-image-target="targetIndex: 12">
+<a-entity id="t11" mindar-image-target="targetIndex: 11">
 <a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
 </a-entity>
 
@@ -215,12 +212,11 @@ const targetsData = [
 { id: 't4', type: 'video', mediaId: 'v5' },
 { id: 't5', type: '3d' },
 { id: 't6', type: '3d' },
-{ id: 't7', type: 'missing' },
-{ id: 't8', type: '3d' },
-{ id: 't9', type: 'image' },
+{ id: 't7', type: '3d' },
+{ id: 't8', type: 'image' },
+{ id: 't9', type: '3d' },
 { id: 't10', type: '3d' },
-{ id: 't11', type: '3d' },
-{ id: 't12', type: 'image' }
+{ id: 't11', type: 'image' }
 ];
 
 const startScreen = document.getElementById('start-screen');
@@ -234,9 +230,13 @@ document.getElementById('start-btn').addEventListener('click', () => {
 startScreen.style.display = 'none';
 document.querySelectorAll('video').forEach(media => {
 media.muted = true;
-media.play().then(() => {
-media.pause(); media.currentTime = 0;
-}).catch(e => console.log(e));
+const playPromise = media.play();
+if (playPromise !== undefined) {
+playPromise.then(() => {
+media.pause(); 
+media.currentTime = 0;
+}).catch(e => {});
+}
 });
 });
 
@@ -250,6 +250,8 @@ media.muted = isMuted;
 
 targetsData.forEach((item, index) => {
 const entity = document.getElementById(item.id);
+if (!entity) return;
+
 entity.addEventListener('targetFound', () => {
 currentTargetIndex = index;
 infoBtn.style.display = 'flex';
@@ -257,7 +259,16 @@ muteBtn.style.display = 'flex';
 
 if (item.type === 'video') {
 const vid = document.getElementById(item.mediaId);
-if(vid) { vid.currentTime = 0; vid.play(); vid.muted = isMuted; }
+if(vid) { 
+vid.muted = isMuted; 
+try {
+if (vid.readyState >= 1) vid.currentTime = 0;
+} catch (e) {}
+const p = vid.play();
+if (p !== undefined) {
+p.catch(e => {});
+}
+}
 }
 });
 
@@ -280,7 +291,10 @@ infoModal.addEventListener('click', () => {
 infoModal.style.display = 'none';
 if (currentTargetIndex !== -1) {
 const item = targetsData[currentTargetIndex];
-if(item.type === 'video') document.getElementById(item.mediaId).play();
+if(item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if (vid) vid.play();
+}
 }
 });
 </script>

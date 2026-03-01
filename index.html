@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+<title>AR Champa</title>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
+
+<script>
+// --- ĐOẠN KIỂM TRA LỖI BẢO MẬT BẮT BUỘC TRÊN MOBILE ---
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("LỖI CAMERA: Điện thoại đang chặn camera vì đường dẫn không có HTTPS (ổn khóa bảo mật). Vui lòng upload code lên host có HTTPS (như GitHub Pages, Vercel) để chạy trên điện thoại!");
+}
+
+// 1. CẢM ỨNG
+AFRAME.registerComponent('gesture-handler', {
+schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
+init: function () {
+this.handleScale = this.handleScale.bind(this);
+this.handleRotation = this.handleRotation.bind(this);
+this.isVisible = false;
+this.initialScale = this.el.object3D.scale.clone();
+this.scaleFactor = 1;
+this.el.sceneEl.addEventListener("markerFound", (e) => { this.isVisible = true; });
+this.el.sceneEl.addEventListener("markerLost", (e) => { this.isVisible = false; });
+},
+update: function () {
+this.el.sceneEl.addEventListener("onefingermove", this.handleRotation);
+this.el.sceneEl.addEventListener("twofingermove", this.handleScale);
+},
+handleRotation: function (event) {
+if (this.isVisible) {
+this.el.object3D.rotation.y += event.detail.positionChange.x * this.data.rotationFactor;
+}
+},
+handleScale: function (event) {
+if (this.isVisible) {
+this.scaleFactor *= (1 + event.detail.spreadChange / event.detail.startSpread);
+this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
+this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;
+this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;
+this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
+}
+}
+});
+
+// 2. PHÁT HIỆN CỬ CHỈ
+AFRAME.registerComponent('gesture-detector', {
+init: function () {
+this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
+this.el.addEventListener('mousemove', (event) => { this.el.emit('onefingermove', { positionChange: { x: event.movementX / 100, y: event.movementY / 100 } }); });
+this.el.addEventListener('touchstart', (event) => {
+if(event.touches.length === 2) {
+this.startSpread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
+}
+if(event.touches.length === 1) this.lastX = event.touches[0].clientX;
+});
+this.el.addEventListener('touchmove', (event) => {
+if (event.touches.length === 1) {
+const touch = event.touches[0];
+const movementX = touch.clientX - (this.lastX || touch.clientX);
+this.lastX = touch.clientX;
+this.el.emit('onefingermove', { positionChange: { x: movementX / 100, y: 0 } });
+}
+if (event.touches.length === 2) {
+const spread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
+const spreadChange = spread - this.startSpread;
+this.el.emit('twofingermove', { spreadChange: spreadChange, startSpread: this.startSpread });
+this.startSpread = spread;
+}
+});
+}
+});
+
+// 3. TÁCH NỀN VIDEO 
+AFRAME.registerComponent('blue-chromakey', {
+schema: {
+src: {type: 'selector'},
+color: {type: 'vec3', default: {x: 0.0, y: 1.0, z: 0.0}}, 
+similarity: {default: 0.25, type: 'number'}
+},
+init: function() {
+const videoEl = this.data.src;
+if (!videoEl) return;
+this.texture = new THREE.VideoTexture(videoEl);
+this.texture.minFilter = THREE.LinearFilter;
+this.texture.format = THREE.RGBAFormat;
+this.material = new THREE.ShaderMaterial({
+uniforms: {
+map: { value: this.texture },
+keyColor: { value: new THREE.Vector3(this.data.color.x, this.data.color.y, this.data.color.z) },
+similarity: { value: this.data.similarity },
+smoothness: { value: 0.08 },
+cropMargin: { value: 0.01 }
+},
+vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+fragmentShader: `
+uniform sampler2D map; uniform vec3 keyColor; uniform float similarity; uniform float smoothness; uniform float cropMargin; varying vec2 vUv;
+void main() {
+if (vUv.y < cropMargin || vUv.y > (1.0 - cropMargin)) { gl_FragColor = vec4(0.0); return; }
+vec4 texColor = texture2D(map, vUv);
+float d = distance(texColor.rgb, keyColor);
+float alpha = smoothstep(similarity, similarity + smoothness, d);
+gl_FragColor = vec4(texColor.rgb, texColor.a * alpha);
+}
+`,
+transparent: true, side: THREE.DoubleSide, depthTest: false
+});
+this.el.getObject3D('mesh').material = this.material;
+},
+tick: function() { if (this.texture) this.texture.needsUpdate = true; }
+});
+</script>
+
+<style>
+body { margin: 0; overflow: hidden; font-family: sans-serif; }
+#start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+#start-btn { padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px;}
+.ui-btn { position: fixed; width: 50px; height: 50px; background: white; border-radius: 50%; border: 3px solid #8B4513; color: #8B4513; font-size: 24px; font-weight: bold; z-index: 1000; cursor: pointer; display: none; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+#info-btn { top: 20px; right: 20px; }
+#mute-btn { top: 80px; right: 20px; font-size: 20px; }
+#info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center; flex-direction: column; }
+#info-content { max-width: 95%; max-height: 85%; border-radius: 10px; border: 2px solid white; object-fit: contain; }
+</style>
+</head>
+
+<body>
+<div id="start-screen">
+<div style="font-size: 14px; color: #ccc;">Đang tải dữ liệu...</div>
+<button id="start-btn">SẴN SÀNG</button>
+</div>
+<div id="info-btn" class="ui-btn">i</div>
+<div id="mute-btn" class="ui-btn">🔇</div>
+<div id="info-modal">
+<img id="info-content" src="./thongtin.png" alt="Thông tin">
+<div style="color:white; margin-top:10px">(Chạm để đóng)</div>
+</div>
+
+<a-scene mindar-image="imageTargetSrc: ./champa.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
+color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
+vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+gesture-detector>
+
+<a-assets>
+<video id="v1" src="./champa1.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v2" src="./champa2.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v3" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v4" src="./champa4.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<video id="v5" src="./champa5.mp4" crossorigin loop playsinline webkit-playsinline muted></video>
+<a-asset-item id="m6" src="./champa6.glb"></a-asset-item>
+<a-asset-item id="m7" src="./champa7.glb"></a-asset-item>
+<a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
+<a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
+<a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
+</a-assets>
+
+<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+<a-entity id="t0" mindar-image-target="targetIndex: 0">
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v1"></a-plane>
+</a-entity>
+
+<a-entity id="t1" mindar-image-target="targetIndex: 1">
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v2"></a-plane>
+</a-entity>
+
+<a-entity id="t2" mindar-image-target="targetIndex: 2">
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v3"></a-plane>
+</a-entity>
+
+<a-entity id="t3" mindar-image-target="targetIndex: 3">
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v4"></a-plane>
+</a-entity>
+
+<a-entity id="t4" mindar-image-target="targetIndex: 4">
+<a-plane rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v5"></a-plane>
+</a-entity>
+
+<a-entity id="t5" mindar-image-target="targetIndex: 5">
+<a-entity gltf-model="#m6" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t6" mindar-image-target="targetIndex: 6">
+<a-entity gltf-model="#m7" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t7" mindar-image-target="targetIndex: 7">
+<a-entity gltf-model="#m9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t8" mindar-image-target="targetIndex: 8">
+<a-plane src="./champa10a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+</a-entity>
+
+<a-entity id="t9" mindar-image-target="targetIndex: 9">
+<a-entity gltf-model="#m11" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t10" mindar-image-target="targetIndex: 10">
+<a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity>
+</a-entity>
+
+<a-entity id="t11" mindar-image-target="targetIndex: 11">
+<a-plane src="./champa13a.png" rotation="0 0 0" position="0 0 0" height="1.5" width="1"></a-plane>
+</a-entity>
+
+</a-scene>
+
+<script>
+const targetsData = [
+{ id: 't0', type: 'video', mediaId: 'v1' },
+{ id: 't1', type: 'video', mediaId: 'v2' },
+{ id: 't2', type: 'video', mediaId: 'v3' },
+{ id: 't3', type: 'video', mediaId: 'v4' },
+{ id: 't4', type: 'video', mediaId: 'v5' },
+{ id: 't5', type: '3d' },
+{ id: 't6', type: '3d' },
+{ id: 't7', type: '3d' },
+{ id: 't8', type: 'image' },
+{ id: 't9', type: '3d' },
+{ id: 't10', type: '3d' },
+{ id: 't11', type: 'image' }
+];
+
+const startScreen = document.getElementById('start-screen');
+const infoBtn = document.getElementById('info-btn');
+const muteBtn = document.getElementById('mute-btn');
+const infoModal = document.getElementById('info-modal');
+let currentTargetIndex = -1;
+let isMuted = true;
+
+document.getElementById('start-btn').addEventListener('click', () => {
+startScreen.style.display = 'none';
+document.querySelectorAll('video').forEach(media => {
+media.muted = true;
+media.play().then(() => {
+media.pause(); media.currentTime = 0;
+}).catch(e => console.log(e));
+});
+});
+
+muteBtn.addEventListener('click', () => {
+isMuted = !isMuted;
+muteBtn.innerText = isMuted ? '🔇' : '🔊';
+document.querySelectorAll('video').forEach(media => {
+media.muted = isMuted;
+});
+});
+
+targetsData.forEach((item, index) => {
+const entity = document.getElementById(item.id);
+entity.addEventListener('targetFound', () => {
+currentTargetIndex = index;
+infoBtn.style.display = 'flex';
+muteBtn.style.display = 'flex';
+
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) { vid.currentTime = 0; vid.play(); vid.muted = isMuted; }
+}
+});
+
+entity.addEventListener('targetLost', () => {
+infoBtn.style.display = 'none';
+muteBtn.style.display = 'none';
+if (item.type === 'video') {
+const vid = document.getElementById(item.mediaId);
+if(vid) vid.pause();
+}
+});
+});
+
+infoBtn.addEventListener('click', () => {
+infoModal.style.display = 'flex';
+document.querySelectorAll('video').forEach(m => m.pause());
+});
+
+infoModal.addEventListener('click', () => {
+infoModal.style.display = 'none';
+if (currentTargetIndex !== -1) {
+const item = targetsData[currentTargetIndex];
+if(item.type === 'video') document.getElementById(item.mediaId).play();
+}
+});
+</script>
+</body>
+</html>

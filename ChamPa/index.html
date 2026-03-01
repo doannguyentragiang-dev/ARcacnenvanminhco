@@ -37,10 +37,10 @@ device-orientation-permission-ui="enabled: false">
 <a-asset-item id="m9" src="./champa9.glb"></a-asset-item>
 <a-asset-item id="m11" src="./champa11.glb"></a-asset-item>
 <a-asset-item id="m12" src="./champa12.glb"></a-asset-item>
+<a-asset-item id="m13" src="./champa13.glb"></a-asset-item>
 
-<!-- IMAGE (đưa vào assets để tránh màn hình đen) -->
+<!-- IMAGE -->
 <img id="img10" src="./champa10.png">
-<img id="img13" src="./champa13.png">
 
 </a-assets>
 
@@ -114,9 +114,9 @@ position="0 0 0.01">
 <a-entity gltf-model="#m12" rotation="90 0 0" scale="1 1 1"></a-entity>
 </a-entity>
 
-<!-- 13 -->
+<!-- 13 (MÔ HÌNH) -->
 <a-entity mindar-image-target="targetIndex: 12">
-<a-plane src="#img13" material="shader: flat" height="1.5" width="1"></a-plane>
+<a-entity gltf-model="#m13" rotation="90 0 0" scale="0.5 0.5 0.5"></a-entity>
 </a-entity>
 
 </a-scene>

@@ -71,7 +71,7 @@ this.startSpread = spread;
 }
 });
 
-// 2. TÁCH NỀN VIDEO - ĐÃ SỬA LỖI TRÀN RAM GÂY ĐƠ MÁY
+// 2. TÁCH NỀN VIDEO CHỐNG ĐƠ MÁY
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -110,10 +110,9 @@ transparent: true, side: THREE.DoubleSide, depthTest: false
 this.el.getObject3D('mesh').material = this.material;
 },
 tick: function() { 
-// CHỐT CHẶN CHỐNG ĐƠ: Kiểm tra xem thẻ mẹ có đang hiển thị không
 let isVisible = this.el.object3D.visible;
 let parentVisible = this.el.object3D.parent ? this.el.object3D.parent.visible : true;
-if (!isVisible || !parentVisible) return; // Nếu thẻ khuất camera -> Dừng tính toán ngay lập tức
+if (!isVisible || !parentVisible) return; 
 
 if (!this.videoEl || this.videoEl.paused || this.videoEl.readyState < 2) return;
 if (this.texture) this.texture.needsUpdate = true; 
@@ -259,91 +258,99 @@ const backBtn = document.getElementById('back-btn');
 const infoModal = document.getElementById('info-modal');
 const menuVanLang1 = document.getElementById('menu-vanlang1');
 
-let activeIdx = -1; // Lưu vị trí thẻ đang chiếu
+let activeIdx = -1; 
 let isAudioPlaying = false;
 let isVideoMode = true; 
-let currentVideo = null; // Quản lý video đang phát
+let currentVideo = null; 
 
 document.getElementById('start-btn').addEventListener('click', () => {
     startScreen.style.display = 'none';
     const dummy = new Audio(); dummy.play().catch(()=>{});
 });
 
-// HÀM DỪNG MỌI ÂM THANH/VIDEO ĐỂ CHỐNG KẸT
+function getVideoIdForTarget(idx) {
+    if (idx === 1) return 'v-vanlang2';
+    if (idx === 2) return 'v-vanlang3';
+    if (idx === 5) return 'v-vanlang6';
+    return null;
+}
+
+// BẢO VỆ CHỐNG TẮT NHẦM CAMERA: CHỈ TẮT CÁC VIDEO/AUDIO CÓ ID BẮT ĐẦU BẰNG v- HOẶC a-
+function resetAll() {
+    document.querySelectorAll('video[id^="v-"], audio[id^="a-"]').forEach(m => { 
+        m.pause(); 
+        m.currentTime = 0; 
+        m.muted = false; 
+    });
+    
+    infoBtn.style.display = 'none';
+    audioBtn.style.display = 'none';
+    toggleVideoBtn.style.display = 'none';
+    backBtn.style.display = 'none';
+    menuVanLang1.style.display = 'none';
+    infoModal.style.display = 'none';
+    
+    ['plane-vuahung', 'plane-lachau', 'plane-lactuong', 'plane-bochinh'].forEach(id => { document.getElementById(id).setAttribute('visible', 'false'); });
+    
+    [1, 2, 5].forEach(idx => {
+        const m = document.getElementById(`model-t${idx}`);
+        const v = document.getElementById(`video-t${idx}`);
+        if(m) m.setAttribute('visible', 'false');
+        if(v) v.setAttribute('visible', 'true');
+    });
+
+    isAudioPlaying = false;
+    audioBtn.innerText = '🔊';
+    isVideoMode = true;
+    currentVideo = null;
+}
+
 function stopAllMedia() {
     if(currentVideo) { currentVideo.pause(); currentVideo = null; }
-    document.querySelectorAll('audio').forEach(a => a.pause());
-    
-    // Đảm bảo tắt luôn video ẩn của thẻ 1
+    document.querySelectorAll('audio[id^="a-"]').forEach(a => a.pause());
     ['v-vuahung', 'v-lachau', 'v-lactuong', 'v-bochinh'].forEach(id => {
         let v = document.getElementById(id);
         if(v) v.pause();
     });
 }
 
-// XỬ LÝ CHUYỂN THẺ AN TOÀN
 for (let i = 0; i < 12; i++) {
     const entity = document.getElementById(`t${i}`);
     if (!entity) continue;
 
     entity.addEventListener('targetFound', () => {
         if (activeIdx !== i) {
-            stopAllMedia(); // Chỉ reset media khi sang thẻ MỚI (chống đơ)
+            resetAll(); 
         }
         activeIdx = i;
-
         infoBtn.style.display = 'flex';
         audioBtn.style.display = 'flex';
-        audioBtn.innerText = '🔊';
-        isAudioPlaying = false;
 
         if (i === 0) {
             menuVanLang1.style.display = 'flex';
-            backBtn.style.display = 'none';
-            ['plane-vuahung', 'plane-lachau', 'plane-lactuong', 'plane-bochinh'].forEach(id => {
-                document.getElementById(id).setAttribute('visible', 'false');
-            });
-            toggleVideoBtn.style.display = 'none';
-        } else {
-            menuVanLang1.style.display = 'none';
-            backBtn.style.display = 'none';
-
-            if (i === 1 || i === 2 || i === 5) {
-                toggleVideoBtn.style.display = 'flex';
-                toggleVideoBtn.innerText = '🧊';
-                isVideoMode = true;
-
-                // Tự động ép về hiện Video, ẩn Model
-                document.getElementById(`model-t${i}`).setAttribute('visible', 'false');
-                document.getElementById(`video-t${i}`).setAttribute('visible', 'true');
-
-                let vidId = (i === 1) ? 'v-vanlang2' : (i === 2 ? 'v-vanlang3' : 'v-vanlang6');
-                currentVideo = document.getElementById(vidId);
-                if (currentVideo) {
-                    currentVideo.muted = false;
-                    currentVideo.play().catch(()=>{});
-                }
-            } else {
-                toggleVideoBtn.style.display = 'none';
+        } else if (i === 1 || i === 2 || i === 5) {
+            toggleVideoBtn.style.display = 'flex';
+            toggleVideoBtn.innerText = '🧊'; 
+            isVideoMode = true;
+            
+            let videoId = getVideoIdForTarget(i);
+            currentVideo = document.getElementById(videoId);
+            if (currentVideo) {
+                currentVideo.muted = isAudioPlaying;
+                try { currentVideo.currentTime = 0; } catch(e){}
+                currentVideo.play().catch(()=>{});
             }
         }
     });
 
     entity.addEventListener('targetLost', () => {
-        // Chỉ tắt đi nếu thẻ bị mất đúng là thẻ đang chạy (ngăn lỗi xung đột làm trắng màn hình)
         if (activeIdx === i) {
-            stopAllMedia();
-            infoBtn.style.display = 'none';
-            audioBtn.style.display = 'none';
-            toggleVideoBtn.style.display = 'none';
-            menuVanLang1.style.display = 'none';
-            backBtn.style.display = 'none';
+            resetAll();
             activeIdx = -1;
         }
     });
 }
 
-// THẺ 1: CHỌN NHÂN VẬT
 window.selectSubVideo = function(charName) {
     menuVanLang1.style.display = 'none';
     backBtn.style.display = 'block';
@@ -359,11 +366,11 @@ window.selectSubVideo = function(charName) {
     if(vid) {
         currentVideo = vid;
         vid.muted = isAudioPlaying; 
+        try { vid.currentTime = 0; } catch(e){}
         vid.play().catch(()=>{});
     }
 }
 
-// THẺ 1: QUAY LẠI MENU
 window.goBack = function() {
     backBtn.style.display = 'none';
     ['plane-vuahung', 'plane-lachau', 'plane-lactuong', 'plane-bochinh'].forEach(id => {
@@ -373,14 +380,13 @@ window.goBack = function() {
     menuVanLang1.style.display = 'flex';
 }
 
-// THẺ 2, 3, 6: ĐẢO QUA LẠI VIDEO/MÔ HÌNH
 toggleVideoBtn.addEventListener('click', () => {
     if (activeIdx !== 1 && activeIdx !== 2 && activeIdx !== 5) return;
     
     isVideoMode = !isVideoMode;
     const model = document.getElementById(`model-t${activeIdx}`);
     const plane = document.getElementById(`video-t${activeIdx}`);
-    let vidId = (activeIdx === 1) ? 'v-vanlang2' : (activeIdx === 2 ? 'v-vanlang3' : 'v-vanlang6');
+    let vidId = getVideoIdForTarget(activeIdx);
     const vid = document.getElementById(vidId);
 
     if (isVideoMode) {
@@ -391,6 +397,7 @@ toggleVideoBtn.addEventListener('click', () => {
         currentVideo = vid;
         if(vid) {
             vid.muted = isAudioPlaying;
+            try { vid.currentTime = 0; } catch(e){}
             vid.play().catch(()=>{});
         }
     } else {
@@ -403,7 +410,6 @@ toggleVideoBtn.addEventListener('click', () => {
     }
 });
 
-// XỬ LÝ ÂM THANH MP3 (LOA)
 audioBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     isAudioPlaying = !isAudioPlaying;
@@ -420,12 +426,15 @@ audioBtn.addEventListener('click', () => {
     }
 });
 
-// XỬ LÝ NÚT THÔNG TIN
 infoBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     document.getElementById('info-content').src = `./vanlang${activeIdx + 1}.png`;
     infoModal.style.display = 'flex';
-    document.querySelectorAll('video, audio').forEach(m => m.pause());
+    
+    // Fix lỗi đơ camera: Chỉ dừng đúng video/audio của nội dung, tuyệt đối không chạm vào camera
+    if (currentVideo) currentVideo.pause();
+    const audioFile = document.getElementById(`a-vanlang${activeIdx + 1}`);
+    if (audioFile && isAudioPlaying) audioFile.pause();
 });
 
 infoModal.addEventListener('click', () => {

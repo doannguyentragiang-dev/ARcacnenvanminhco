@@ -1,10 +1,218 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Văn Lang - Âu Lạc AR</title>
-  </head>
-  <body>
-    <h1>Chào mừng đến với AR Văn Lang - Âu Lạc</h1>
-    <p>Đang cập nhật...</p>
-  </body>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR Văn Lang</title>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+<style>
+body{margin:0;overflow:hidden;font-family:sans-serif;}
+.ui-btn{
+position:fixed;
+right:20px;
+width:50px;
+height:50px;
+background:white;
+border-radius:50%;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:20px;
+z-index:9999;
+cursor:pointer;
+}
+#infoBtn{top:20px;}
+#audioBtn{top:80px;}
+#backBtn{top:140px;display:none;}
+#videoLayer{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:black;
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9998;
+}
+</style>
+</head>
+
+<body>
+
+<div id="infoBtn" class="ui-btn">i</div>
+<div id="audioBtn" class="ui-btn">🔊</div>
+<div id="backBtn" class="ui-btn">⟲</div>
+
+<div id="videoLayer"></div>
+
+<a-scene
+mindar-image="imageTargetSrc: ./targets.mind; uiScanning:no;"
+color-space="sRGB"
+renderer="colorManagement:true"
+vr-mode-ui="enabled:false"
+device-orientation-permission-ui="enabled:false">
+
+<a-assets>
+
+<!-- SƠ ĐỒ -->
+<img id="sodo1" src="./vanlang1.png">
+
+<!-- THÔNG TIN -->
+<img id="info1" src="./vanlang1.png">
+<img id="info2" src="./vanlang2.png">
+<img id="info3" src="./vanlang3.png">
+<img id="info4" src="./vanlang4.png">
+<img id="info5" src="./vanlang5.png">
+<img id="info6" src="./vanlang6.png">
+<img id="info7" src="./vanlang7.png">
+<img id="info8" src="./vanlang8.png">
+<img id="info9" src="./vanlang9.png">
+<img id="info10" src="./vanlang10.png">
+<img id="info11" src="./vanlang11.png">
+<img id="info12" src="./vanlang12.png">
+
+<!-- MODEL -->
+<a-asset-item id="m2" src="./vanlang2.glb"></a-asset-item>
+<a-asset-item id="m3" src="./vanlang3.glb"></a-asset-item>
+<a-asset-item id="m4" src="./vanlang4.glb"></a-asset-item>
+<a-asset-item id="m5" src="./vanlang5.glb"></a-asset-item>
+<a-asset-item id="m6" src="./vanlang6.glb"></a-asset-item>
+<a-asset-item id="m7" src="./vanlang7.glb"></a-asset-item>
+<a-asset-item id="m8" src="./vanlang8.glb"></a-asset-item>
+<a-asset-item id="m9" src="./vanlang9.glb"></a-asset-item>
+<a-asset-item id="m10" src="./vanlang10.glb"></a-asset-item>
+<a-asset-item id="m11" src="./vanlang11.glb"></a-asset-item>
+<a-asset-item id="m12" src="./vanlang12.glb"></a-asset-item>
+
+<!-- VIDEO -->
+<video id="vuahung" src="./vuahung.mp4" playsinline></video>
+<video id="lachau" src="./lachau.mp4" playsinline></video>
+<video id="lactuong" src="./lactuong.mp4" playsinline></video>
+<video id="bochinh" src="./bochinh.mp4" playsinline></video>
+
+<video id="v2" src="./vanlang2.mp4" playsinline></video>
+<video id="v6" src="./vanlang6.mp4" playsinline></video>
+
+<!-- AUDIO -->
+<audio id="a1" src="./vanlang1.mp3"></audio>
+<audio id="a2" src="./vanlang2.mp3"></audio>
+<audio id="a3" src="./vanlang3.mp3"></audio>
+<audio id="a4" src="./vanlang4.mp3"></audio>
+<audio id="a5" src="./vanlang5.mp3"></audio>
+<audio id="a6" src="./vanlang6.mp3"></audio>
+<audio id="a7" src="./vanlang7.mp3"></audio>
+<audio id="a8" src="./vanlang8.mp3"></audio>
+<audio id="a9" src="./vanlang9.mp3"></audio>
+<audio id="a10" src="./vanlang10.mp3"></audio>
+<audio id="a11" src="./vanlang11.mp3"></audio>
+<audio id="a12" src="./vanlang12.mp3"></audio>
+
+</a-assets>
+
+<a-camera position="0 0 0"></a-camera>
+
+<!-- VANLANG1 -->
+<a-entity mindar-image-target="targetIndex:0">
+<a-plane src="#sodo1" height="2" width="1.2"></a-plane>
+
+<a-plane id="hung" position="0 0.7 0.01" width="0.6" height="0.3" color="transparent"></a-plane>
+<a-plane id="lachauBtn" position="0 0.2 0.01" width="0.6" height="0.3" color="transparent"></a-plane>
+<a-plane id="lactuongBtn" position="0 -0.3 0.01" width="0.6" height="0.3" color="transparent"></a-plane>
+<a-plane id="bochinhBtn" position="0 -0.8 0.01" width="0.6" height="0.3" color="transparent"></a-plane>
+</a-entity>
+
+<!-- VANLANG2 -->
+<a-entity mindar-image-target="targetIndex:1">
+<a-entity gltf-model="#m2" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<!-- VANLANG3 -->
+<a-entity mindar-image-target="targetIndex:2">
+<a-entity gltf-model="#m3" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<!-- VANLANG4-12 -->
+<a-entity mindar-image-target="targetIndex:3">
+<a-entity gltf-model="#m4" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:4">
+<a-entity gltf-model="#m5" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:5">
+<a-entity gltf-model="#m6" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:6">
+<a-entity gltf-model="#m7" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:7">
+<a-entity gltf-model="#m8" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:8">
+<a-entity gltf-model="#m9" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:9">
+<a-entity gltf-model="#m10" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:10">
+<a-entity gltf-model="#m11" rotation="90 90 0"></a-entity>
+</a-entity>
+
+<a-entity mindar-image-target="targetIndex:11">
+<a-entity gltf-model="#m12" rotation="90 90 0"></a-entity>
+</a-entity>
+
+</a-scene>
+
+<script>
+
+const videoLayer=document.getElementById("videoLayer");
+const backBtn=document.getElementById("backBtn");
+const audioBtn=document.getElementById("audioBtn");
+
+function stopAll(){
+document.querySelectorAll("video").forEach(v=>v.pause());
+document.querySelectorAll("audio").forEach(a=>a.pause());
+}
+
+function playVideo(id,color){
+stopAll();
+videoLayer.style.display="flex";
+videoLayer.style.background=color;
+const v=document.getElementById(id);
+v.currentTime=0;
+v.play();
+videoLayer.innerHTML="";
+videoLayer.appendChild(v);
+backBtn.style.display="flex";
+}
+
+document.getElementById("hung").onclick=()=>playVideo("vuahung","#00b2ff");
+document.getElementById("lachauBtn").onclick=()=>playVideo("lachau","#00b2ff");
+document.getElementById("lactuongBtn").onclick=()=>playVideo("lactuong","#00b2ff");
+document.getElementById("bochinhBtn").onclick=()=>playVideo("bochinh","#00b2ff");
+
+backBtn.onclick=()=>{
+stopAll();
+videoLayer.style.display="none";
+backBtn.style.display="none";
+};
+
+audioBtn.onclick=()=>{
+stopAll();
+let current=videoLayer.querySelector("video");
+if(current) current.muted=true;
+};
+
+</script>
+
+</body>
 </html>

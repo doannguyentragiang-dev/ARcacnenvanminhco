@@ -1,1 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+<title>AR Phù Nam</title>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
+<script>
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("LỖI CAMERA: Vui lòng chạy trên HTTPS để điện thoại cho phép mở camera!");
+}
+
+// 1. CẢM ỨNG (Zoom, Xoay)
+AFRAME.registerComponent('gesture-handler', {
+schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
+init: function () {
+this.handleScale = this.handleScale.bind(this);
+this.handleRotation = this.handleRotation.bind(this);
+this.isVisible = false;
+this.initialScale = this.el.object3D.scale.clone();
+this.scaleFactor = 1;
+this.el.sceneEl.addEventListener("markerFound", (e) => { this.isVisible = true; });
+this.el.sceneEl.addEventListener("markerLost", (e) => { this.isVisible = false; });
+},
+update: function () {
+this.el.sceneEl.addEventListener("onefingermove", this.handleRotation);
+this.el.sceneEl.addEventListener("twofingermove", this.handleScale);
+},
+handleRotation: function (event) {
+if (this.isVisible) {
+this.el.object3D.rotation.y += event.detail.positionChange.x * this.data.rotationFactor;
+}
+},
+handleScale: function (event) {
+if (this.isVisible) {
+this.scaleFactor *= (1 + event.detail.spreadChange / event.detail.startSpread);
+this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
+this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;
+this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;
+this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
+}
+}
+});
+
+AFRAME.registerComponent('gesture-detector', {
+init: function () {
+this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
+this.el.addEventListener('mousemove', (event) => { this.el.emit('onefingermove', { positionChange: { x: event.movementX / 100, y: event.movementY / 100 } }); });
+this.el.addEventListener('touchstart', (event) => {
+if(event.touches.length === 2) {
+this.startSpread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
+}
+if(event.touches.length === 1) this.lastX = event.touches[0].clientX;
+});
+this.el.addEventListener('touchmove', (event) => {
+if (event.touches.length === 1) {
+const touch = event.touches[0];
+const movementX = touch.clientX - (this.lastX || touch.clientX);
+this.lastX = touch.clientX;
+this.el.emit('onefingermove', { positionChange: { x: movementX / 100, y: 0 } });
+}
+if (event.touches.length === 2) {
+const spread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
+const spreadChange = spread - this.startSpread;
+this.el.emit('twofingermove', { spreadChange: spreadChange, startSpread: this.startSpread });
+this.startSpread = spread;
+}
+});
+}
+});
+
+// 2. TÁCH NỀN VIDEO CHỐNG ĐƠ MÁY
+AFRAME.registerComponent('blue-chromakey', {
+schema: {
+src: {type: 'selector'},
+color: {type: 'vec3', default: {x: 0.0, y: 1.0, z: 0.0}}, 
+similarity: {default: 0.25, type: 'number'},
+crop: {default: 0.02, type: 'number'}
+},
+init: function() {
+const videoEl = this.data.src;
+if (!videoEl) return;
+this.videoEl = videoEl;
+this.texture = new THREE.VideoTexture(videoEl);
+this.texture.minFilter = THREE.LinearFilter;
+this.texture.format = THREE.RGBAFormat;
+this.material = new THREE.ShaderMaterial({
+uniforms: {
+map: { value: this.texture },
+keyColor: { value: new THREE.Vector3(this.data.color.x, this.data.color.y, this.data.color.z) },
+similarity: { value: this.data.similarity },
+smoothness: { value: 0.08 },
+cropMargin: { value: this.data.crop } 
+},
+vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+fragmentShader: `
+uniform sampler2D map; uniform vec3 keyColor; uniform float similarity; uniform float smoothness; uniform float cropMargin; varying vec2 vUv;
+void main() {
+if (vUv.y < cropMargin || vUv.y > (1.0 - cropMargin) || vUv.x < cropMargin || vUv.x > (1.0 - cropMargin)) { gl_FragColor = vec4(0.0); return; }
+vec4 texColor = texture2D(map, vUv);
+float d = distance(texColor.rgb, keyColor);
+float alpha = smoothstep(similarity, similarity + smoothness, d);
+gl_FragColor = vec4(texColor.rgb, texColor.a * alpha);
+}
+`,
+transparent: true, side: THREE.DoubleSide, depthTest: false
+});
+this.el.getObject3D('mesh').material = this.material;
+},
+tick: function() { 
+let isVisible = this.el.object3D.visible;
+let parentVisible = this.el.object3D.parent ? this.el.object3D.parent.visible : true;
+if (!isVisible || !parentVisible) return; 
+
+if (!this.videoEl || this.videoEl.paused || this.videoEl.readyState < 2) return;
+if (this.texture) this.texture.needsUpdate = true; 
+}
+});
+</script>
+
+<style>
+body { margin: 0; overflow: hidden; font-family: sans-serif; }
+#start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
+#start-btn { padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px;}
+
+.ui-btn { position: fixed; width: 50px; height: 50px; background: white; border-radius: 50%; border: 3px solid #8B4513; color: #8B4513; font-size: 24px; font-weight: bold; z-index: 1000; cursor: pointer; display: none; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+#info-btn { top: 20px; right: 20px; }
+#audio-btn { top: 80px; right: 20px; font-size: 20px;}
+
+#info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center; flex-direction: column; }
+#info-content { max-width: 95%; max-height: 85%; border-radius: 10px; border: 2px solid white; object-fit: contain; }
+
+#back-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #d32f2f; color: white; border-radius: 20px; border: 2px solid white; font-weight: bold; display: none; z-index: 2000; cursor: pointer; }
+
+/* Alert tuỳ chỉnh cho Sắp hoàn thiện */
+#custom-alert { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; border: 3px solid #8B4513; color: #8B4513; font-weight: bold; z-index: 10002; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
+.mindar-ui-overlay { display: none !important; }
+.mindar-ui-loading { display: none !important; }
+.mindar-ui-scanning { display: none !important; }
+</style>
+</head>
+
+<body>
+<div id="start-screen">
+<div style="font-size: 14px; color: #ccc;">Đang nạp dữ liệu Phù Nam...</div>
+<button id="start-btn">SẴN SÀNG</button>
+</div>
+
+<div id="info-btn" class="ui-btn">i</div>
+<div id="audio-btn" class="ui-btn">🔊</div>
+
+<div id="info-modal">
+<img id="info-content" src="" alt="Thông tin">
+<div style="color:white; margin-top:10px">(Chạm để đóng)</div>
+</div>
+
+<div id="custom-alert">Dữ liệu đang được cập nhật <br>(Sắp hoàn thiện) <br><br><span style="font-size:14px; color:gray;">Chạm để đóng</span></div>
+
+<button id="back-btn" onclick="goBack()">🔄 QUAY LẠI</button>
+
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
+color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
+vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+gesture-detector>
+
+<a-assets timeout="10000">
+<video id="v-phunam1" src="./phunam1.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam2" src="./phunam2.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam3" src="./phunam3.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam4" src="./phunam4.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam5" src="./phunam5.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+
+<video id="v-phunam10" src="./phunam10.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam11" src="./phunam11.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+<video id="v-phunam12" src="./phunam12.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+
+<a-asset-item id="m-phunam7" src="./phunam7.glb"></a-asset-item>
+<a-asset-item id="m-phunam8" src="./phunam8.glb"></a-asset-item>
+<a-asset-item id="m-phunam9" src="./phunam9.glb"></a-asset-item>
+
+<audio id="a-phunam1" src="./phunam1.mp3" preload="none"></audio>
+<audio id="a-phunam2" src="./phunam2.mp3" preload="none"></audio>
+<audio id="a-phunam3" src="./phunam3.mp3" preload="none"></audio>
+<audio id="a-phunam4" src="./phunam4.mp3" preload="none"></audio>
+<audio id="a-phunam5" src="./phunam5.mp3" preload="none"></audio>
+<audio id="a-phunam7" src="./phunam7.mp3" preload="none"></audio>
+<audio id="a-phunam8" src="./phunam8.mp3" preload="none"></audio>
+<audio id="a-vanlang9" src="./phunam9.mp3" preload="none"></audio>
+<audio id="a-phunam10" src="./phunam10.mp3" preload="none"></audio>
+<audio id="a-phunam11" src="./phunam11.mp3" preload="none"></audio>
+<audio id="a-phunam12" src="./phunam12.mp3" preload="none"></audio>
+</a-assets>
+
+<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+<a-entity id="t0" mindar-image-target="targetIndex: 0"><a-plane id="media-t0" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam1; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t1" mindar-image-target="targetIndex: 1"><a-plane id="media-t1" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam2; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t2" mindar-image-target="targetIndex: 2"><a-plane id="media-t2" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam3; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t3" mindar-image-target="targetIndex: 3"><a-plane id="media-t3" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam4; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t4" mindar-image-target="targetIndex: 4"><a-plane id="media-t4" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam5; color: 0 1 0"></a-plane></a-entity>
+
+<a-entity id="t5" mindar-image-target="targetIndex: 5">
+    <a-text id="media-t5" visible="false" value="Sap hoan thien" color="white" align="center" scale="2 2 2"></a-text>
+</a-entity>
+
+<a-entity id="t6" mindar-image-target="targetIndex: 6"><a-entity id="media-t6" visible="false" gltf-model="#m-phunam7" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
+<a-entity id="t7" mindar-image-target="targetIndex: 7"><a-entity id="media-t7" visible="false" gltf-model="#m-phunam8" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
+<a-entity id="t8" mindar-image-target="targetIndex: 8"><a-entity id="media-t8" visible="false" gltf-model="#m-phunam9" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
+
+<a-entity id="t9" mindar-image-target="targetIndex: 9"><a-plane id="media-t9" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam10; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t10" mindar-image-target="targetIndex: 10"><a-plane id="media-t10" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam11; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t11" mindar-image-target="targetIndex: 11"><a-plane id="media-t11" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-phunam12; color: 0 1 0"></a-plane></a-entity>
+
+</a-scene>
+
+<script>
+// --- CẤU HÌNH TÀI NGUYÊN (Sửa thành true khi bạn đã copy file tương ứng vào thư mục) ---
+const cardConfig = [
+    { type: 'video', id: 'v-phunam1', hasInfo: false, hasAudio: false }, // Thẻ 1 (Index 0)
+    { type: 'video', id: 'v-phunam2', hasInfo: false, hasAudio: false }, // Thẻ 2
+    { type: 'video', id: 'v-phunam3', hasInfo: false, hasAudio: false }, // Thẻ 3
+    { type: 'video', id: 'v-phunam4', hasInfo: false, hasAudio: false }, // Thẻ 4
+    { type: 'video', id: 'v-phunam5', hasInfo: false, hasAudio: false }, // Thẻ 5
+    { type: 'missing', id: null, hasInfo: false, hasAudio: false },      // Thẻ 6 (Index 5)
+    { type: 'model', id: 'm-phunam7', hasInfo: false, hasAudio: false }, // Thẻ 7
+    { type: 'model', id: 'm-phunam8', hasInfo: false, hasAudio: false }, // Thẻ 8
+    { type: 'model', id: 'm-phunam9', hasInfo: false, hasAudio: false }, // Thẻ 9
+    { type: 'video', id: 'v-phunam10', hasInfo: false, hasAudio: false },// Thẻ 10
+    { type: 'video', id: 'v-phunam11', hasInfo: false, hasAudio: false },// Thẻ 11
+    { type: 'video', id: 'v-phunam12', hasInfo: false, hasAudio: false } // Thẻ 12 (Index 11)
+];
+
+const startScreen = document.getElementById('start-screen');
+const infoBtn = document.getElementById('info-btn');
+const audioBtn = document.getElementById('audio-btn');
+const infoModal = document.getElementById('info-modal');
+const customAlert = document.getElementById('custom-alert');
+
+let activeIdx = -1; 
+let isAudioPlaying = false;
+let currentVideo = null; 
+
+document.getElementById('start-btn').addEventListener('click', () => {
+    startScreen.style.display = 'none';
+    const dummy = new Audio(); dummy.play().catch(()=>{});
+});
+
+function resetAll() {
+    document.querySelectorAll('video[id^="v-"], audio[id^="a-"]').forEach(m => { 
+        m.pause(); m.currentTime = 0; m.muted = false; 
+    });
+    
+    infoBtn.style.display = 'none';
+    audioBtn.style.display = 'none';
+    infoModal.style.display = 'none';
+    customAlert.style.display = 'none';
+    
+    for(let j = 0; j < 12; j++) {
+        let media = document.getElementById(`media-t${j}`);
+        if(media) media.setAttribute('visible', 'false');
+    }
+
+    isAudioPlaying = false;
+    audioBtn.innerText = '🔊';
+    currentVideo = null;
+}
+
+// LẶP SỰ KIỆN TÌM THẺ
+for (let i = 0; i < 12; i++) {
+    const entity = document.getElementById(`t${i}`);
+    if (!entity) continue;
+
+    entity.addEventListener('targetFound', () => {
+        if (activeIdx !== i) { resetAll(); }
+        activeIdx = i;
+        
+        infoBtn.style.display = 'flex';
+        audioBtn.style.display = 'flex';
+
+        // Bật hiển thị Media (Video/Model/Text)
+        let media = document.getElementById(`media-t${i}`);
+        if(media) media.setAttribute('visible', 'true');
+
+        // Phát video nếu có
+        if (cardConfig[i].type === 'video') {
+            currentVideo = document.getElementById(cardConfig[i].id);
+            if (currentVideo) {
+                currentVideo.muted = isAudioPlaying;
+                try { currentVideo.currentTime = 0; } catch(e){}
+                currentVideo.play().catch(()=>{});
+            }
+        }
+    });
+
+    entity.addEventListener('targetLost', () => {
+        if (activeIdx === i) {
+            resetAll();
+            activeIdx = -1;
+        }
+    });
+}
+
+// BẤM NÚT THÔNG TIN
+infoBtn.addEventListener('click', () => {
+    if (activeIdx === -1) return;
+    
+    if (cardConfig[activeIdx].hasInfo) {
+        // Tên file ảnh tương ứng (VD: phunam1.png, phunam7.png)
+        document.getElementById('info-content').src = `./phunam${activeIdx + 1}.png`;
+        infoModal.style.display = 'flex';
+        
+        // Tạm dừng media
+        if (currentVideo) currentVideo.pause();
+        const audioFile = document.getElementById(`a-phunam${activeIdx + 1}`);
+        if (audioFile && isAudioPlaying) audioFile.pause();
+    } else {
+        // Hiện Alert Sắp Hoàn Thiện
+        customAlert.style.display = 'block';
+    }
+});
+
+// BẤM NÚT ÂM THANH
+audioBtn.addEventListener('click', () => {
+    if (activeIdx === -1) return;
+
+    if (cardConfig[activeIdx].hasAudio) {
+        isAudioPlaying = !isAudioPlaying;
+        audioBtn.innerText = isAudioPlaying ? '🎵' : '🔊';
+
+        const audioFile = document.getElementById(`a-phunam${activeIdx + 1}`);
+
+        if (isAudioPlaying) {
+            if (audioFile) audioFile.play().catch(()=>{});
+            if (currentVideo) currentVideo.muted = true;
+        } else {
+            if (audioFile) audioFile.pause();
+            if (currentVideo) currentVideo.muted = false;
+        }
+    } else {
+        customAlert.style.display = 'block';
+    }
+});
+
+// ĐÓNG THÔNG TIN HOẶC ALERT
+infoModal.addEventListener('click', () => {
+    infoModal.style.display = 'none';
+    if (isAudioPlaying) {
+        const audioFile = document.getElementById(`a-phunam${activeIdx + 1}`);
+        if(audioFile) audioFile.play().catch(()=>{});
+    }
+    if (currentVideo) currentVideo.play().catch(()=>{});
+});
+
+customAlert.addEventListener('click', () => {
+    customAlert.style.display = 'none';
+});
+
+window.goBack = function() {
+    // Để trống do Phù Nam không có thẻ con, nhưng giữ hàm để tránh báo lỗi JS.
+}
+</script>
+</body>
+</html>

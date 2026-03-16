@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-<title>AR Văn Lang</title>
+<title>AR Văn Lang - Âu Lạc</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -12,7 +12,7 @@ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("LỖI CAMERA: Vui lòng chạy trên HTTPS để điện thoại cho phép mở camera!");
 }
 
-// 1. CẢM ỨNG
+// 1. CẢM ỨNG 3D
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -71,7 +71,7 @@ this.startSpread = spread;
 }
 });
 
-// 2. TÁCH NỀN VIDEO CHỐNG ĐƠ MÁY
+// 2. TÁCH NỀN VIDEO 
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -121,7 +121,7 @@ if (this.texture) this.texture.needsUpdate = true;
 </script>
 
 <style>
-body { margin: 0; overflow: hidden; font-family: sans-serif; }
+body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;}
 #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
 #start-btn { padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px;}
 
@@ -129,6 +129,7 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 #info-btn { top: 20px; right: 20px; }
 #audio-btn { top: 80px; right: 20px; font-size: 20px;}
 #toggle-video-btn { top: 140px; right: 20px; font-size: 20px; background: #e3f2fd; } 
+#game-btn { top: 200px; right: 20px; font-size: 20px; background: #fff59d; } /* Nút dẫn link Canva */
 
 #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center; flex-direction: column; }
 #info-content { max-width: 95%; max-height: 85%; border-radius: 10px; border: 2px solid white; object-fit: contain; }
@@ -154,7 +155,8 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 
 <div id="info-btn" class="ui-btn">i</div>
 <div id="audio-btn" class="ui-btn">🔊</div>
-<div id="toggle-video-btn" class="ui-btn" title="Chuyển đổi Video/Mô hình">🧊</div>
+<div id="toggle-video-btn" class="ui-btn" title="Đổi Video/Mô hình">🧊</div>
+<div id="game-btn" class="ui-btn" title="Chơi Game">🎮</div>
 
 <div id="info-modal">
 <img id="info-content" src="" alt="Thông tin">
@@ -233,6 +235,7 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t3" mindar-image-target="targetIndex: 3"><a-entity gltf-model="#m-vanlang4" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
+
 <a-entity id="t4" mindar-image-target="targetIndex: 4"><a-entity gltf-model="#m-vanlang5" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
 
 <a-entity id="t5" mindar-image-target="targetIndex: 5">
@@ -254,6 +257,7 @@ const startScreen = document.getElementById('start-screen');
 const infoBtn = document.getElementById('info-btn');
 const audioBtn = document.getElementById('audio-btn');
 const toggleVideoBtn = document.getElementById('toggle-video-btn');
+const gameBtn = document.getElementById('game-btn');
 const backBtn = document.getElementById('back-btn');
 const infoModal = document.getElementById('info-modal');
 const menuVanLang1 = document.getElementById('menu-vanlang1');
@@ -275,7 +279,6 @@ function getVideoIdForTarget(idx) {
     return null;
 }
 
-// BẢO VỆ CHỐNG TẮT NHẦM CAMERA: CHỈ TẮT CÁC VIDEO/AUDIO CÓ ID BẮT ĐẦU BẰNG v- HOẶC a-
 function resetAll() {
     document.querySelectorAll('video[id^="v-"], audio[id^="a-"]').forEach(m => { 
         m.pause(); 
@@ -286,6 +289,7 @@ function resetAll() {
     infoBtn.style.display = 'none';
     audioBtn.style.display = 'none';
     toggleVideoBtn.style.display = 'none';
+    gameBtn.style.display = 'none'; 
     backBtn.style.display = 'none';
     menuVanLang1.style.display = 'none';
     infoModal.style.display = 'none';
@@ -319,12 +323,14 @@ for (let i = 0; i < 12; i++) {
     if (!entity) continue;
 
     entity.addEventListener('targetFound', () => {
-        if (activeIdx !== i) {
-            resetAll(); 
-        }
+        if (activeIdx !== i) { resetAll(); }
         activeIdx = i;
         infoBtn.style.display = 'flex';
         audioBtn.style.display = 'flex';
+
+        if (i === 3) {
+            gameBtn.style.display = 'flex';
+        }
 
         if (i === 0) {
             menuVanLang1.style.display = 'flex';
@@ -431,7 +437,6 @@ infoBtn.addEventListener('click', () => {
     document.getElementById('info-content').src = `./vanlang${activeIdx + 1}.png`;
     infoModal.style.display = 'flex';
     
-    // Fix lỗi đơ camera: Chỉ dừng đúng video/audio của nội dung, tuyệt đối không chạm vào camera
     if (currentVideo) currentVideo.pause();
     const audioFile = document.getElementById(`a-vanlang${activeIdx + 1}`);
     if (audioFile && isAudioPlaying) audioFile.pause();
@@ -446,6 +451,12 @@ infoModal.addEventListener('click', () => {
     if (currentVideo) {
         currentVideo.play().catch(()=>{});
     }
+});
+
+// Sự kiện bấm nút Game mở link Canva
+gameBtn.addEventListener('click', () => {
+    stopAllMedia(); // Tạm dừng mọi âm thanh để không bị ồn khi mở tab mới
+    window.open('https://nhom4detainghiencuukhoahoc.my.canva.site/mamcomngayxua', '_blank');
 });
 </script>
 </body>

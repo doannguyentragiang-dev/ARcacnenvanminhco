@@ -12,66 +12,7 @@ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("LỖI CAMERA: Vui lòng chạy trên HTTPS để điện thoại cho phép mở camera!");
 }
 
-// 1. CẢM ỨNG
-AFRAME.registerComponent('gesture-handler', {
-schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
-init: function () {
-this.handleScale = this.handleScale.bind(this);
-this.handleRotation = this.handleRotation.bind(this);
-this.isVisible = false;
-this.initialScale = this.el.object3D.scale.clone();
-this.scaleFactor = 1;
-this.el.sceneEl.addEventListener("markerFound", (e) => { this.isVisible = true; });
-this.el.sceneEl.addEventListener("markerLost", (e) => { this.isVisible = false; });
-},
-update: function () {
-this.el.sceneEl.addEventListener("onefingermove", this.handleRotation);
-this.el.sceneEl.addEventListener("twofingermove", this.handleScale);
-},
-handleRotation: function (event) {
-if (this.isVisible) {
-this.el.object3D.rotation.y += event.detail.positionChange.x * this.data.rotationFactor;
-}
-},
-handleScale: function (event) {
-if (this.isVisible) {
-this.scaleFactor *= (1 + event.detail.spreadChange / event.detail.startSpread);
-this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
-this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;
-this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;
-this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
-}
-}
-});
-
-AFRAME.registerComponent('gesture-detector', {
-init: function () {
-this.el.addEventListener('mousedown', (event) => { this.el.emit('rangeStart', event); });
-this.el.addEventListener('mousemove', (event) => { this.el.emit('onefingermove', { positionChange: { x: event.movementX / 100, y: event.movementY / 100 } }); });
-this.el.addEventListener('touchstart', (event) => {
-if(event.touches.length === 2) {
-this.startSpread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
-}
-if(event.touches.length === 1) this.lastX = event.touches[0].clientX;
-});
-this.el.addEventListener('touchmove', (event) => {
-if (event.touches.length === 1) {
-const touch = event.touches[0];
-const movementX = touch.clientX - (this.lastX || touch.clientX);
-this.lastX = touch.clientX;
-this.el.emit('onefingermove', { positionChange: { x: movementX / 100, y: 0 } });
-}
-if (event.touches.length === 2) {
-const spread = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY);
-const spreadChange = spread - this.startSpread;
-this.el.emit('twofingermove', { spreadChange: spreadChange, startSpread: this.startSpread });
-this.startSpread = spread;
-}
-});
-}
-});
-
-// 2. TÁCH NỀN CHỐNG ĐƠ RAM
+// 1. TÁCH NỀN VIDEO (Siêu tối ưu)
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -148,7 +89,7 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 
 <body>
 <div id="start-screen">
-<div style="font-size: 14px; color: #ccc;">Đang nạp 24 thẻ Đại Việt...</div>
+<div style="font-size: 14px; color: #ccc;">Đang nạp dữ liệu Đại Việt...</div>
 <button id="start-btn">SẴN SÀNG</button>
 </div>
 
@@ -163,139 +104,82 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 <div id="custom-alert">Dữ liệu đang được cập nhật <br>(Sắp hoàn thiện) <br><br><span style="font-size:14px; color:gray;">Chạm để đóng</span></div>
 
 <div id="menu-daiviet10">
-<div class="stone-btn" onclick="selectSubVideo('daiviet10a')">1</div>
-<div class="stone-btn" onclick="selectSubVideo('daiviet10b')">2</div>
-<div class="stone-btn" onclick="selectSubVideo('daiviet10c')">3</div>
+<div class="stone-btn" onclick="selectSubVideo('daiviet10a')">VIDEO 1</div>
+<div class="stone-btn" onclick="selectSubVideo('daiviet10b')">VIDEO 2</div>
+<div class="stone-btn" onclick="selectSubVideo('daiviet10c')">VIDEO 3</div>
 </div>
 
 <button id="back-btn" onclick="goBack()">🔄 QUAY LẠI</button>
 
 <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
 color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
-vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
-gesture-detector>
+vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
 <a-assets timeout="10000">
-<video id="v-daiviet1" src="./daiviet1.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet2" src="./daiviet2.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet3" src="./daiviet3.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet4" src="./daiviet4.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet5" src="./daiviet5.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet6" src="./daiviet6.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet7" src="./daiviet7.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet8" src="./daiviet8.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet9" src="./daiviet9.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-
-<video id="v-daiviet10a" src="./daiviet10a.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet10b" src="./daiviet10b.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet10c" src="./daiviet10c.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-
-<video id="v-daiviet11" src="./daiviet11.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet12" src="./daiviet12.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet13" src="./daiviet13.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet14" src="./daiviet14.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet15" src="./daiviet15.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet16" src="./daiviet16.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet17" src="./daiviet17.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet18" src="./daiviet18.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet19" src="./daiviet19.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet20" src="./daiviet20.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet21" src="./daiviet21.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet22" src="./daiviet22.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet23" src="./daiviet23.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<video id="v-daiviet24" src="./daiviet24.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-
-<audio id="a-daiviet1" src="./daiviet1.mp3" preload="none"></audio>
-<audio id="a-daiviet2" src="./daiviet2.mp3" preload="none"></audio>
-<audio id="a-daiviet3" src="./daiviet3.mp3" preload="none"></audio>
-<audio id="a-daiviet4" src="./daiviet4.mp3" preload="none"></audio>
-<audio id="a-daiviet5" src="./daiviet5.mp3" preload="none"></audio>
-<audio id="a-daiviet6" src="./daiviet6.mp3" preload="none"></audio>
-<audio id="a-daiviet7" src="./daiviet7.mp3" preload="none"></audio>
-<audio id="a-daiviet8" src="./daiviet8.mp3" preload="none"></audio>
-<audio id="a-daiviet9" src="./daiviet9.mp3" preload="none"></audio>
-<audio id="a-daiviet10" src="./daiviet10.mp3" preload="none"></audio>
-<audio id="a-daiviet11" src="./daiviet11.mp3" preload="none"></audio>
-<audio id="a-daiviet12" src="./daiviet12.mp3" preload="none"></audio>
-<audio id="a-daiviet13" src="./daiviet13.mp3" preload="none"></audio>
-<audio id="a-daiviet14" src="./daiviet14.mp3" preload="none"></audio>
-<audio id="a-daiviet15" src="./daiviet15.mp3" preload="none"></audio>
-<audio id="a-daiviet16" src="./daiviet16.mp3" preload="none"></audio>
-<audio id="a-daiviet17" src="./daiviet17.mp3" preload="none"></audio>
-<audio id="a-daiviet18" src="./daiviet18.mp3" preload="none"></audio>
-<audio id="a-daiviet19" src="./daiviet19.mp3" preload="none"></audio>
-<audio id="a-daiviet20" src="./daiviet20.mp3" preload="none"></audio>
-<audio id="a-daiviet21" src="./daiviet21.mp3" preload="none"></audio>
-<audio id="a-daiviet22" src="./daiviet22.mp3" preload="none"></audio>
-<audio id="a-daiviet23" src="./daiviet23.mp3" preload="none"></audio>
-<audio id="a-daiviet24" src="./daiviet24.mp3" preload="none"></audio>
+    <video id="main-video" src="./daiviet1.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+    <audio id="main-audio" preload="none"></audio>
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-<a-entity id="t0" mindar-image-target="targetIndex: 0"><a-plane id="media-t0" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet1; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t1" mindar-image-target="targetIndex: 1"><a-plane id="media-t1" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet2; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t2" mindar-image-target="targetIndex: 2"><a-plane id="media-t2" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet3; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t3" mindar-image-target="targetIndex: 3"><a-plane id="media-t3" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet4; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t4" mindar-image-target="targetIndex: 4"><a-plane id="media-t4" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet5; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t5" mindar-image-target="targetIndex: 5"><a-plane id="media-t5" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet6; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t6" mindar-image-target="targetIndex: 6"><a-plane id="media-t6" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet7; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t7" mindar-image-target="targetIndex: 7"><a-plane id="media-t7" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet8; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t8" mindar-image-target="targetIndex: 8"><a-plane id="media-t8" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet9; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t0" mindar-image-target="targetIndex: 0"><a-plane id="media-t0" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t1" mindar-image-target="targetIndex: 1"><a-plane id="media-t1" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t2" mindar-image-target="targetIndex: 2"><a-plane id="media-t2" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t3" mindar-image-target="targetIndex: 3"><a-plane id="media-t3" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t4" mindar-image-target="targetIndex: 4"><a-plane id="media-t4" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t5" mindar-image-target="targetIndex: 5"><a-plane id="media-t5" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t6" mindar-image-target="targetIndex: 6"><a-plane id="media-t6" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t7" mindar-image-target="targetIndex: 7"><a-plane id="media-t7" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t8" mindar-image-target="targetIndex: 8"><a-plane id="media-t8" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
 
-<a-entity id="t9" mindar-image-target="targetIndex: 9">
-    <a-plane id="plane-daiviet10a" rotation="0 0 0" position="0 0 0" height="2" width="1.2" visible="false" blue-chromakey="src: #v-daiviet10a; color: 0 1 0"></a-plane>
-    <a-plane id="plane-daiviet10b" rotation="0 0 0" position="0 0 0" height="2" width="1.2" visible="false" blue-chromakey="src: #v-daiviet10b; color: 0 1 0"></a-plane>
-    <a-plane id="plane-daiviet10c" rotation="0 0 0" position="0 0 0" height="2" width="1.2" visible="false" blue-chromakey="src: #v-daiviet10c; color: 0 1 0"></a-plane>
-</a-entity>
+<a-entity id="t9" mindar-image-target="targetIndex: 9"><a-plane id="media-t9" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
 
-<a-entity id="t10" mindar-image-target="targetIndex: 10"><a-plane id="media-t10" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet11; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t11" mindar-image-target="targetIndex: 11"><a-plane id="media-t11" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet12; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t12" mindar-image-target="targetIndex: 12"><a-plane id="media-t12" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet13; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t13" mindar-image-target="targetIndex: 13"><a-plane id="media-t13" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet14; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t14" mindar-image-target="targetIndex: 14"><a-plane id="media-t14" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet15; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t15" mindar-image-target="targetIndex: 15"><a-plane id="media-t15" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet16; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t16" mindar-image-target="targetIndex: 16"><a-plane id="media-t16" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet17; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t17" mindar-image-target="targetIndex: 17"><a-plane id="media-t17" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet18; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t18" mindar-image-target="targetIndex: 18"><a-plane id="media-t18" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet19; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t19" mindar-image-target="targetIndex: 19"><a-plane id="media-t19" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet20; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t20" mindar-image-target="targetIndex: 20"><a-plane id="media-t20" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet21; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t21" mindar-image-target="targetIndex: 21"><a-plane id="media-t21" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet22; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t22" mindar-image-target="targetIndex: 22"><a-plane id="media-t22" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet23; color: 0 1 0"></a-plane></a-entity>
-<a-entity id="t23" mindar-image-target="targetIndex: 23"><a-plane id="media-t23" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #v-daiviet24; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t10" mindar-image-target="targetIndex: 10"><a-plane id="media-t10" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t11" mindar-image-target="targetIndex: 11"><a-plane id="media-t11" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t12" mindar-image-target="targetIndex: 12"><a-plane id="media-t12" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t13" mindar-image-target="targetIndex: 13"><a-plane id="media-t13" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t14" mindar-image-target="targetIndex: 14"><a-plane id="media-t14" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t15" mindar-image-target="targetIndex: 15"><a-plane id="media-t15" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t16" mindar-image-target="targetIndex: 16"><a-plane id="media-t16" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t17" mindar-image-target="targetIndex: 17"><a-plane id="media-t17" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t18" mindar-image-target="targetIndex: 18"><a-plane id="media-t18" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t19" mindar-image-target="targetIndex: 19"><a-plane id="media-t19" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t20" mindar-image-target="targetIndex: 20"><a-plane id="media-t20" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t21" mindar-image-target="targetIndex: 21"><a-plane id="media-t21" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t22" mindar-image-target="targetIndex: 22"><a-plane id="media-t22" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
+<a-entity id="t23" mindar-image-target="targetIndex: 23"><a-plane id="media-t23" visible="false" rotation="0 0 0" position="0 0 0" height="2" width="1.2" blue-chromakey="src: #main-video; color: 0 1 0"></a-plane></a-entity>
 
 </a-scene>
 
 <script>
-// --- BẢNG ĐIỀU KHIỂN DỮ LIỆU ĐẠI VIỆT (0 đến 23) ---
-// MẶC ĐỊNH LÀ FALSE. KHI CÓ ẢNH HOẶC ÂM THANH, SỬA THÀNH TRUE
+// --- Đổi từ false thành true khi bạn đã copy ảnh .png hoặc nhạc .mp3 vào ---
 const cardConfig = [
-    { type: 'video', id: 'v-daiviet1', hasInfo: false, hasAudio: false }, // Thẻ 1 (idx 0)
-    { type: 'video', id: 'v-daiviet2', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet3', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet4', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet5', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet6', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet7', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet8', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet9', hasInfo: false, hasAudio: false }, // Thẻ 9 (idx 8)
+    { type: 'video', id: 'daiviet1', hasInfo: false, hasAudio: false }, 
+    { type: 'video', id: 'daiviet2', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet3', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet4', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet5', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet6', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet7', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet8', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet9', hasInfo: false, hasAudio: false }, 
     
-    { type: 'special', id: null, hasInfo: false, hasAudio: false },       // Thẻ 10 MENU (idx 9)
+    { type: 'special', id: null, hasInfo: false, hasAudio: false },  // Thẻ 10
     
-    { type: 'video', id: 'v-daiviet11', hasInfo: false, hasAudio: false },// Thẻ 11 (idx 10)
-    { type: 'video', id: 'v-daiviet12', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet13', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet14', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet15', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet16', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet17', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet18', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet19', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet20', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet21', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet22', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet23', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'v-daiviet24', hasInfo: false, hasAudio: false } // Thẻ 24 (idx 23)
+    { type: 'video', id: 'daiviet11', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet12', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet13', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet14', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet15', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet16', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet17', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet18', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet19', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet20', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet21', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet22', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet23', hasInfo: false, hasAudio: false },
+    { type: 'video', id: 'daiviet24', hasInfo: false, hasAudio: false } 
 ];
 
 const startScreen = document.getElementById('start-screen');
@@ -306,20 +190,22 @@ const customAlert = document.getElementById('custom-alert');
 const menuDaiviet10 = document.getElementById('menu-daiviet10');
 const backBtn = document.getElementById('back-btn');
 
+const mainVideo = document.getElementById('main-video');
+const mainAudio = document.getElementById('main-audio');
+
 let activeIdx = -1; 
 let isAudioPlaying = false;
-let currentVideo = null; 
-const subVideosT9 = ['plane-daiviet10a', 'plane-daiviet10b', 'plane-daiviet10c'];
 
 document.getElementById('start-btn').addEventListener('click', () => {
     startScreen.style.display = 'none';
-    const dummy = new Audio(); dummy.play().catch(()=>{});
+    // Mở khóa âm thanh và video cho Safari iOS
+    mainVideo.play().catch(()=>{});
+    mainAudio.play().catch(()=>{});
 });
 
 function resetAll() {
-    document.querySelectorAll('video[id^="v-"], audio[id^="a-"]').forEach(m => { 
-        m.pause(); m.currentTime = 0; m.muted = false; 
-    });
+    mainVideo.pause();
+    mainAudio.pause();
     
     infoBtn.style.display = 'none';
     audioBtn.style.display = 'none';
@@ -328,25 +214,15 @@ function resetAll() {
     menuDaiviet10.style.display = 'none';
     backBtn.style.display = 'none';
     
-    // Ẩn tất cả thẻ thường
     for(let j = 0; j < 24; j++) {
-        if(j === 9) continue; // Thẻ 10 đặc biệt
         let media = document.getElementById(`media-t${j}`);
         if(media) media.setAttribute('visible', 'false');
     }
-    
-    // Ẩn tất cả video phụ của thẻ 10
-    subVideosT9.forEach(id => {
-        let p = document.getElementById(id);
-        if(p) p.setAttribute('visible', 'false');
-    });
 
     isAudioPlaying = false;
     audioBtn.innerText = '🔊';
-    currentVideo = null;
 }
 
-// LẶP SỰ KIỆN TÌM 24 THẺ
 for (let i = 0; i < 24; i++) {
     const entity = document.getElementById(`t${i}`);
     if (!entity) continue;
@@ -358,21 +234,23 @@ for (let i = 0; i < 24; i++) {
         infoBtn.style.display = 'flex';
         audioBtn.style.display = 'flex';
 
+        let conf = cardConfig[i];
+        
+        // Setup trước âm thanh
+        if (conf.hasAudio) {
+            mainAudio.src = `./daiviet${i + 1}.mp3`;
+        }
+
         if (i === 9) {
-            // Đây là thẻ daiviet10 (index 9)
             menuDaiviet10.style.display = 'flex';
         } else {
-            // Các thẻ video thông thường
             let media = document.getElementById(`media-t${i}`);
             if(media) media.setAttribute('visible', 'true');
 
-            if (cardConfig[i].type === 'video') {
-                currentVideo = document.getElementById(cardConfig[i].id);
-                if (currentVideo) {
-                    currentVideo.muted = isAudioPlaying;
-                    try { currentVideo.currentTime = 0; } catch(e){}
-                    currentVideo.play().catch(()=>{});
-                }
+            if (conf.type === 'video') {
+                mainVideo.src = `./${conf.id}.mp4`;
+                mainVideo.muted = isAudioPlaying;
+                mainVideo.play().catch(()=>{});
             }
         }
     });
@@ -385,34 +263,25 @@ for (let i = 0; i < 24; i++) {
     });
 }
 
-// XỬ LÝ NÚT MENU CỦA THẺ 10
+// BẤM VÀO 3 NÚT TRONG MENU THẺ 10
 window.selectSubVideo = function(subId) {
     menuDaiviet10.style.display = 'none';
     backBtn.style.display = 'block';
 
-    subVideosT9.forEach(id => {
-        document.getElementById(id).setAttribute('visible', 'false');
-    });
-
-    const plane = document.getElementById(`plane-${subId}`);
-    const vid = document.getElementById(`v-${subId}`);
+    let media = document.getElementById(`media-t9`);
+    if(media) media.setAttribute('visible', 'true');
     
-    if(plane) plane.setAttribute('visible', 'true');
-    if(vid) {
-        currentVideo = vid;
-        vid.muted = isAudioPlaying; 
-        try { vid.currentTime = 0; } catch(e){}
-        vid.play().catch(()=>{});
-    }
+    mainVideo.src = `./${subId}.mp4`;
+    mainVideo.muted = isAudioPlaying; 
+    mainVideo.play().catch(()=>{});
 }
 
-// NÚT QUAY LẠI CỦA THẺ 10
 window.goBack = function() {
     backBtn.style.display = 'none';
-    subVideosT9.forEach(id => {
-        document.getElementById(id).setAttribute('visible', 'false');
-    });
-    if(currentVideo) { currentVideo.pause(); currentVideo = null; }
+    let media = document.getElementById(`media-t9`);
+    if(media) media.setAttribute('visible', 'false');
+    
+    mainVideo.pause();
     menuDaiviet10.style.display = 'flex';
 }
 
@@ -424,9 +293,8 @@ infoBtn.addEventListener('click', () => {
         document.getElementById('info-content').src = `./daiviet${activeIdx + 1}.png`;
         infoModal.style.display = 'flex';
         
-        if (currentVideo) currentVideo.pause();
-        const audioFile = document.getElementById(`a-daiviet${activeIdx + 1}`);
-        if (audioFile && isAudioPlaying) audioFile.pause();
+        mainVideo.pause();
+        mainAudio.pause();
     } else {
         customAlert.style.display = 'block';
     }
@@ -440,28 +308,30 @@ audioBtn.addEventListener('click', () => {
         isAudioPlaying = !isAudioPlaying;
         audioBtn.innerText = isAudioPlaying ? '🎵' : '🔊';
 
-        const audioFile = document.getElementById(`a-daiviet${activeIdx + 1}`);
-
         if (isAudioPlaying) {
-            if (audioFile) audioFile.play().catch(()=>{});
-            if (currentVideo) currentVideo.muted = true;
+            mainAudio.play().catch(()=>{});
+            mainVideo.muted = true;
         } else {
-            if (audioFile) audioFile.pause();
-            if (currentVideo) currentVideo.muted = false;
+            mainAudio.pause();
+            mainVideo.muted = false;
         }
     } else {
         customAlert.style.display = 'block';
     }
 });
 
-// ĐÓNG THÔNG TIN HOẶC ALERT
+// ĐÓNG MENU THÔNG TIN
 infoModal.addEventListener('click', () => {
     infoModal.style.display = 'none';
-    if (isAudioPlaying) {
-        const audioFile = document.getElementById(`a-daiviet${activeIdx + 1}`);
-        if(audioFile) audioFile.play().catch(()=>{});
+    
+    if (isAudioPlaying && cardConfig[activeIdx].hasAudio) {
+        mainAudio.play().catch(()=>{});
     }
-    if (currentVideo) currentVideo.play().catch(()=>{});
+    
+    // Nếu không phải đang ở trang Menu Thẻ 10, thì tiếp tục phát video
+    if (activeIdx !== 9 || backBtn.style.display === 'block') {
+        mainVideo.play().catch(()=>{});
+    }
 });
 
 customAlert.addEventListener('click', () => {

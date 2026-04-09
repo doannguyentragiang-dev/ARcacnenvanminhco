@@ -9,9 +9,10 @@
 
 <script>
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("LOI CAMERA: Vui long chay tren HTTPS");
+    alert("LỖI CAMERA: Vui lòng chạy trên HTTPS");
 }
 
+// 1. CẢM ỨNG 3D
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -70,6 +71,7 @@ this.startSpread = spread;
 }
 });
 
+// 2. TÁCH NỀN VIDEO (Siêu tối ưu RAM)
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -120,6 +122,9 @@ if (this.texture) this.texture.needsUpdate = true;
 
 <style>
 body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none; }
+/* BỌC THÉP TÀI NGUYÊN */
+a-assets, video, audio { display: none !important; }
+
 #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
 #start-btn { padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px;}
 
@@ -148,8 +153,8 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 
 <body>
 <div id="start-screen">
-<div style="font-size: 14px; color: #ccc;">Dang nap du lieu...</div>
-<button id="start-btn">SAN SANG</button>
+<div style="font-size: 14px; color: #ccc;">Đang nạp dữ liệu Văn Lang...</div>
+<button id="start-btn">SẴN SÀNG</button>
 </div>
 
 <div id="info-btn" class="ui-btn">i</div>
@@ -158,32 +163,32 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 
 <div id="info-modal">
 <img id="info-content" src="" alt="Thong tin">
-<div style="color:white; margin-top:10px">Cham de dong</div>
+<div style="color:white; margin-top:10px">Chạm để đóng</div>
 </div>
 
-<div id="custom-alert">Du lieu dang cap nhat <br><br><span style="font-size:14px; color:gray;">Cham de dong</span></div>
+<div id="custom-alert">Dữ liệu đang cập nhật <br><br><span style="font-size:14px; color:gray;">Chạm để đóng</span></div>
 <div id="weather-alert">Nhiệt đới ẩm gió mùa</div>
 
 <div id="menu-vanlang1" class="menu-overlay">
-<div class="stone-btn" onclick="selectVideoT1('vuahung')">HUNG VUONG</div>
+<div class="stone-btn" onclick="selectVideoT1('vuahung')">HÙNG VƯƠNG</div>
 <div class="row-btn">
-<div class="stone-btn" onclick="selectVideoT1('lachau')">LAC HAU</div>
-<div class="stone-btn" onclick="selectVideoT1('lactuong')">LAC TUONG</div>
+<div class="stone-btn" onclick="selectVideoT1('lachau')">LẠC HẦU</div>
+<div class="stone-btn" onclick="selectVideoT1('lactuong')">LẠC TƯỚNG</div>
 </div>
-<div class="stone-btn" onclick="selectVideoT1('bochinh')">BO CHINH</div>
+<div class="stone-btn" onclick="selectVideoT1('bochinh')">BỒ CHÍNH</div>
 </div>
 
 <div id="menu-vanlang14" class="menu-overlay">
-<div class="stone-btn" onclick="showWeather()">🌡️ NHIET DO</div>
-<div class="stone-btn" onclick="showMinerals()">💎 KHOANG SAN</div>
+<div class="stone-btn" onclick="showWeather()">🌡️ NHIỆT ĐỘ</div>
+<div class="stone-btn" onclick="showMinerals()">💎 KHOÁNG SẢN</div>
 </div>
 
 <div id="menu-vanlang15" class="menu-overlay">
-<div class="stone-btn" onclick="selectCulture('phungnguyen')">VAN HOA PHUNG NGUYEN</div>
-<div class="stone-btn" onclick="selectCulture('dongson')">VAN HOA DONG SON</div>
+<div class="stone-btn" onclick="selectCulture('phungnguyen')">VĂN HÓA PHÙNG NGUYÊN</div>
+<div class="stone-btn" onclick="selectCulture('dongson')">VĂN HÓA ĐÔNG SƠN</div>
 </div>
 
-<button id="back-btn" onclick="goBack()">QUAY LAI</button>
+<button id="back-btn" onclick="goBack()">QUAY LẠI</button>
 
 <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF:0.001; filterBeta: 10;"
 color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
@@ -191,22 +196,22 @@ vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
 gesture-detector>
 
 <a-assets timeout="10000">
-<video id="main-video" src="./vuahung.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
-<audio id="main-audio" src="./vanlang1.mp3" preload="none"></audio>
+    <video id="main-video" src="" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
+    <audio id="main-audio" src="" preload="none"></audio>
 
-<a-asset-item id="m-vanlang2" src="./vanlang2.glb"></a-asset-item>
-<a-asset-item id="m-vanlang3" src="./vanlang3.glb"></a-asset-item>
-<a-asset-item id="m-vanlang4" src="./vanlang4.glb"></a-asset-item>
-<a-asset-item id="m-vanlang5" src="./vanlang5.glb"></a-asset-item>
-<a-asset-item id="m-vanlang6" src="./vanlang6.glb"></a-asset-item>
-<a-asset-item id="m-vanlang7" src="./vanlang7.glb"></a-asset-item>
-<a-asset-item id="m-vanlang8" src="./vanlang8.glb"></a-asset-item>
-<a-asset-item id="m-vanlang9" src="./vanlang9.glb"></a-asset-item>
-<a-asset-item id="m-vanlang10" src="./vanlang10.glb"></a-asset-item>
-<a-asset-item id="m-vanlang11" src="./vanlang11.glb"></a-asset-item>
-<a-asset-item id="m-vanlang12" src="./vanlang12.glb"></a-asset-item>
-<a-asset-item id="m-15b" src="./vanlang15b.glb"></a-asset-item>
-<a-asset-item id="m-15c" src="./vanlang15c.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang2" src="./vanlang2.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang3" src="./vanlang3.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang4" src="./vanlang4.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang5" src="./vanlang5.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang6" src="./vanlang6.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang7" src="./vanlang7.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang8" src="./vanlang8.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang9" src="./vanlang9.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang10" src="./vanlang10.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang11" src="./vanlang11.glb"></a-asset-item>
+    <a-asset-item id="m-vanlang12" src="./vanlang12.glb"></a-asset-item>
+    <a-asset-item id="m-15b" src="./vanlang15b.glb"></a-asset-item>
+    <a-asset-item id="m-15c" src="./vanlang15c.glb"></a-asset-item>
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -261,7 +266,7 @@ gesture-detector>
 const cardConfig = [
     { type: 'menu1', hasInfo: true, hasAudio: true },
     { type: 'toggle', vidId: 'vanlang2', hasInfo: true, hasAudio: true },
-    { type: 'toggle', vidId: 'vanlang2', hasInfo: true, hasAudio: true },
+    { type: 'toggle', vidId: 'vanlang3', hasInfo: true, hasAudio: true }, // Sửa lỗi chép nhầm vanlang2
     { type: 'model', hasInfo: true, hasAudio: true },
     { type: 'model', hasInfo: true, hasAudio: true },
     { type: 'toggle', vidId: 'vanlang6', hasInfo: true, hasAudio: true },
@@ -296,8 +301,9 @@ let currentAudioSrc = '';
 
 document.getElementById('start-btn').addEventListener('click', () => {
     startScreen.style.display = 'none';
-    mainVideo.play().catch(()=>{});
-    mainAudio.play().catch(()=>{});
+    // Khởi tạo engine Media nhưng KHÔNG phát ngay
+    mainVideo.play().then(() => mainVideo.pause()).catch(()=>{});
+    mainAudio.play().then(() => mainAudio.pause()).catch(()=>{});
 });
 
 function hideAllMenus() {
@@ -351,6 +357,8 @@ for (let i = 0; i < 15; i++) {
         let conf = cardConfig[i];
         currentInfoSrc = `./ttvanlang${i + 1}.png`;
         currentAudioSrc = `./vanlang${i + 1}.mp3`;
+        
+        // CHỈ NẠP AUDIO, KHÔNG PHÁT TỰ ĐỘNG
         mainAudio.src = currentAudioSrc;
 
         if (conf.type === 'menu1') {
@@ -374,7 +382,7 @@ for (let i = 0; i < 15; i++) {
             let p = document.getElementById(`media-t${i}`);
             if (p) p.setAttribute('visible', 'true');
             mainVideo.src = `./${conf.vidId}.mp4`;
-            mainVideo.muted = isAudioPlaying;
+            mainVideo.muted = isAudioPlaying; // Nếu user lỡ bật tiếng trước đó thì video câm
             mainVideo.play().catch(()=>{});
         } else if (conf.type === 'model') {
             let m = document.getElementById(`model-t${i}`);
@@ -390,6 +398,7 @@ for (let i = 0; i < 15; i++) {
     });
 }
 
+// XỬ LÝ CHỌN VIDEO TRONG MENU
 window.selectVideoT1 = function(id) {
     hideAllMenus();
     backBtn.style.display = 'block';
@@ -433,6 +442,7 @@ window.selectCulture = function(type) {
     }
 }
 
+// QUAY LẠI TỪ CÁC CHỨC NĂNG CON
 window.goBack = function() {
     backBtn.style.display = 'none';
     if (activeIdx === 0) {
@@ -455,6 +465,7 @@ window.goBack = function() {
     }
 }
 
+// CHUYỂN ĐỔI GIỮA MÔ HÌNH VÀ VIDEO
 toggleBtn.addEventListener('click', () => {
     isVideoMode = !isVideoMode;
     const model = document.getElementById(`model-t${activeIdx}`);
@@ -476,6 +487,7 @@ toggleBtn.addEventListener('click', () => {
     }
 });
 
+// NÚT THÔNG TIN
 infoBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     if (cardConfig[activeIdx].hasInfo) {
@@ -488,6 +500,7 @@ infoBtn.addEventListener('click', () => {
     }
 });
 
+// NÚT ÂM THANH
 audioBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     if (cardConfig[activeIdx].hasAudio) {
@@ -495,16 +508,17 @@ audioBtn.addEventListener('click', () => {
         audioBtn.innerText = isAudioPlaying ? '🎵' : '🔊';
         if (isAudioPlaying) {
             mainAudio.play().catch(()=>{});
-            mainVideo.muted = true;
+            mainVideo.muted = true; // Bật nhạc thì tắt tiếng video
         } else {
             mainAudio.pause();
-            mainVideo.muted = false;
+            mainVideo.muted = false; // Tắt nhạc thì bật lại tiếng video
         }
     } else {
         customAlert.style.display = 'block';
     }
 });
 
+// ĐÓNG MODAL THÔNG TIN
 infoModal.addEventListener('click', () => {
     infoModal.style.display = 'none';
     if (isAudioPlaying) mainAudio.play().catch(()=>{});

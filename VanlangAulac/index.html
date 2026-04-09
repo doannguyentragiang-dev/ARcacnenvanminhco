@@ -75,7 +75,7 @@ this.startSpread = spread;
 }
 });
 
-// 2. TÁCH NỀN VIDEO (Nguyên gốc mượt mà)
+// 2. TÁCH NỀN VIDEO
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -126,8 +126,16 @@ if (this.texture) this.texture.needsUpdate = true;
 
 <style>
 body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;}
+
+/* --- GIAO DIỆN THANH TẢI TRANG SIÊU ĐÁNG YÊU --- */
 #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
-#start-btn { padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px;}
+#loading-container { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px; }
+.loading-text { font-size: 16px; margin-bottom: 20px; line-height: 1.6; color: #f8f9fa; font-style: italic; }
+.progress-box { width: 280px; height: 18px; background: rgba(255,255,255,0.2); border-radius: 20px; border: 2px solid #fff; overflow: hidden; position: relative; }
+#progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #FF8C00, #FFD700); transition: width 0.3s ease; }
+#progress-percentage { margin-top: 15px; font-weight: bold; font-size: 22px; color: #FFD700; }
+#start-btn { display: none; padding: 15px 50px; font-size: 24px; font-weight: bold; background: #FF4500; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); margin-top: 20px; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
 .ui-btn { position: fixed; width: 50px; height: 50px; background: white; border-radius: 50%; border: 3px solid #8B4513; color: #8B4513; font-size: 24px; font-weight: bold; z-index: 1000; cursor: pointer; display: none; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 #info-btn { top: 20px; right: 20px; }
@@ -143,16 +151,13 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 .stone-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #5d4037; }
 .row-btn { display: flex; gap: 10px; width: 100%; }
 
-/* Thiết kế Nút chức năng Thẻ 14 & 15 gọn gàng, nhỏ nhẹ theo ý bạn */
 #menu-vanlang14 { display: none; position: fixed; right: 20px; bottom: 80px; flex-direction: column; gap: 10px; z-index: 2000; }
 #menu-vanlang15 { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; flex-direction: row; gap: 10px; z-index: 2000; justify-content: center; }
 .small-btn { background-color: rgba(255, 248, 220, 0.95); color: #8B4513; border: 2px solid #8B4513; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 2px 2px 0px #8B4513; cursor: pointer; flex: 1; white-space: nowrap;}
 .small-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #8B4513; }
 
 #weather-alert { display: none; position: fixed; top: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 20px; font-weight: bold; font-size: 20px; z-index: 2001; text-align: center; }
-
 #back-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #d32f2f; color: white; border-radius: 20px; border: 2px solid white; font-weight: bold; display: none; z-index: 2000; cursor: pointer; }
-
 #custom-alert { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; border: 3px solid #8B4513; color: #8B4513; font-weight: bold; z-index: 10002; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 
 .mindar-ui-overlay { display: none !important; }
@@ -162,9 +167,18 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 </head>
 
 <body>
+
 <div id="start-screen">
-<div style="font-size: 14px; color: #ccc;">Đang nạp dữ liệu Văn Lang...</div>
-<button id="start-btn">SẴN SÀNG</button>
+    <div id="loading-container">
+        <div class="loading-text">
+            Dữ liệu mình nhiều quá, mình chạy hơi chậm,<br>bạn vui lòng đợi mình nhé hic hic 🥺
+        </div>
+        <div class="progress-box">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="progress-percentage">0%</div>
+    </div>
+    <button id="start-btn">SẴN SÀNG</button>
 </div>
 
 <div id="info-btn" class="ui-btn">i</div>
@@ -174,7 +188,7 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 
 <div id="info-modal">
 <img id="info-content" src="" alt="Thông tin">
-<div style="color:white; margin-top:10px">Chạm để đóng</div>
+<div style="color:white; margin-top:10px">(Chạm để đóng)</div>
 </div>
 
 <div id="custom-alert">Dữ liệu đang được cập nhật <br><br><span style="font-size:14px; color:gray;">Chạm để đóng</span></div>
@@ -206,7 +220,7 @@ color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
 gesture-detector>
 
-<a-assets timeout="10000">
+<a-assets timeout="20000">
 <video id="v-vuahung" src="./vuahung.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
 <video id="v-lachau" src="./lachau.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
 <video id="v-lactuong" src="./lactuong.mp4" crossorigin="anonymous" loop playsinline webkit-playsinline muted preload="none"></video>
@@ -270,6 +284,7 @@ gesture-detector>
 </a-entity>
 
 <a-entity id="t3" mindar-image-target="targetIndex: 3"><a-entity gltf-model="#m-vanlang4" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
+
 <a-entity id="t4" mindar-image-target="targetIndex: 4"><a-entity gltf-model="#m-vanlang5" rotation="90 0 0" scale="1 1 1" gesture-handler animation-mixer></a-entity></a-entity>
 
 <a-entity id="t5" mindar-image-target="targetIndex: 5">
@@ -302,6 +317,38 @@ gesture-detector>
 </a-scene>
 
 <script>
+// --- LOGIC THANH TIẾN TRÌNH ---
+const loadingContainer = document.getElementById('loading-container');
+const startBtn = document.getElementById('start-btn');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-percentage');
+const sceneEl = document.querySelector('a-scene');
+
+let loadProgress = 0;
+let progressInterval = setInterval(() => {
+    loadProgress += Math.floor(Math.random() * 8) + 2; 
+    if (loadProgress >= 95) loadProgress = 95; // Giữ ở 95% chờ A-frame load xong
+    progressBar.style.width = loadProgress + '%';
+    progressText.innerText = loadProgress + '%';
+}, 400);
+
+function finishLoading() {
+    clearInterval(progressInterval);
+    progressBar.style.width = '100%';
+    progressText.innerText = '100%';
+    setTimeout(() => {
+        loadingContainer.style.display = 'none';
+        startBtn.style.display = 'block';
+    }, 600);
+}
+
+if (sceneEl.hasLoaded) {
+    finishLoading();
+} else {
+    sceneEl.addEventListener('loaded', finishLoading);
+}
+
+// --- LOGIC AR GỐC ---
 const startScreen = document.getElementById('start-screen');
 const infoBtn = document.getElementById('info-btn');
 const audioBtn = document.getElementById('audio-btn');
@@ -319,9 +366,9 @@ let activeIdx = -1;
 let isAudioPlaying = false;
 let isVideoMode = true; 
 let currentVideo = null; 
-let activeSubMenu = ''; // Biến để theo dõi trạng thái thẻ 14, 15
+let activeSubMenu = '';
 
-document.getElementById('start-btn').addEventListener('click', () => {
+startBtn.addEventListener('click', () => {
     startScreen.style.display = 'none';
     const dummy = new Audio(); dummy.play().catch(()=>{});
 });
@@ -393,6 +440,9 @@ for (let i = 0; i < 15; i++) {
         activeIdx = i;
         infoBtn.style.display = 'flex';
         audioBtn.style.display = 'flex';
+        
+        currentAudioId = `a-vanlang${i + 1}`;
+        currentInfoId = `ttvanlang${i + 1}`;
 
         if (i === 3) {
             gameBtn.style.display = 'flex';
@@ -420,7 +470,8 @@ for (let i = 0; i < 15; i++) {
         } else if (i === 14) {
             menuVanLang15.style.display = 'flex';
             document.getElementById('img-15').setAttribute('visible', 'true');
-            activeSubMenu = '15a';
+            currentAudioId = 'a-15a';
+            currentInfoId = 'ttvanlang15a';
         }
     });
 
@@ -471,20 +522,21 @@ window.selectCulture = function(type) {
     backBtn.style.display = 'block';
     document.getElementById('img-15').setAttribute('visible', 'false');
     
-    // Tạm dừng nhạc nền thẻ gốc
-    let currentAudio = document.getElementById(`a-${activeSubMenu}`);
+    let currentAudio = document.getElementById(currentAudioId);
     if (currentAudio) currentAudio.pause();
 
     if (type === 'phungnguyen') {
         document.getElementById('model-15b').setAttribute('visible', 'true');
-        activeSubMenu = '15b';
+        currentAudioId = 'a-15b';
+        currentInfoId = 'ttvanlang15b';
     } else {
         document.getElementById('model-15c').setAttribute('visible', 'true');
-        activeSubMenu = '15c';
+        currentAudioId = 'a-15c';
+        currentInfoId = 'ttvanlang15c';
     }
 
     if (isAudioPlaying) {
-        let newAudio = document.getElementById(`a-${activeSubMenu}`);
+        let newAudio = document.getElementById(currentAudioId);
         if (newAudio) newAudio.play().catch(()=>{});
     }
 }
@@ -507,14 +559,14 @@ window.goBack = function() {
         document.getElementById('img-15').setAttribute('visible', 'true');
         menuVanLang15.style.display = 'flex';
         
-        let oldAudio = document.getElementById(`a-${activeSubMenu}`);
+        let oldAudio = document.getElementById(currentAudioId);
         if (oldAudio) oldAudio.pause();
         
-        activeSubMenu = '15a';
-        
+        currentAudioId = 'a-15a';
+        currentInfoId = 'ttvanlang15a';
         if (isAudioPlaying) {
-            let newAudio = document.getElementById(`a-15a`);
-            if (newAudio) newAudio.play().catch(()=>{});
+            let defaultAudio = document.getElementById(currentAudioId);
+            if (defaultAudio) defaultAudio.play().catch(()=>{});
         }
     }
 }
@@ -554,10 +606,7 @@ audioBtn.addEventListener('click', () => {
     isAudioPlaying = !isAudioPlaying;
     audioBtn.innerText = isAudioPlaying ? '🎵' : '🔊';
 
-    let audioId = `a-vanlang${activeIdx + 1}`;
-    if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
-
-    const audioFile = document.getElementById(audioId);
+    const audioFile = document.getElementById(currentAudioId);
 
     if (isAudioPlaying) {
         if (audioFile) audioFile.play().catch(()=>{});
@@ -571,30 +620,19 @@ audioBtn.addEventListener('click', () => {
 infoBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     
-    let infoSrc = `./ttvanlang${activeIdx + 1}.png`;
-    if (activeIdx === 14) { infoSrc = `./ttvanlang${activeSubMenu}.png`; }
-    
-    // Check xem có file info chưa (Sắp hoàn thiện)
-    // Để giữ code nguyên gốc của bạn thì tạm thời sẽ hiện ảnh, 
-    // Nếu bạn muốn báo chưa hoàn thiện thì dùng customAlert, nhưng theo code bạn đưa thì không có logic check file tồn tại.
-    // Tạm thời mở modal:
-    document.getElementById('info-content').src = infoSrc;
+    document.getElementById('info-content').src = `./${currentInfoId}.png`;
     infoModal.style.display = 'flex';
     
     if (currentVideo) currentVideo.pause();
     
-    let audioId = `a-vanlang${activeIdx + 1}`;
-    if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
-    const audioFile = document.getElementById(audioId);
+    const audioFile = document.getElementById(currentAudioId);
     if (audioFile && isAudioPlaying) audioFile.pause();
 });
 
 infoModal.addEventListener('click', () => {
     infoModal.style.display = 'none';
     if (isAudioPlaying) {
-        let audioId = `a-vanlang${activeIdx + 1}`;
-        if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
-        const audioFile = document.getElementById(audioId);
+        const audioFile = document.getElementById(currentAudioId);
         if(audioFile) audioFile.play().catch(()=>{});
     }
     if (currentVideo) {

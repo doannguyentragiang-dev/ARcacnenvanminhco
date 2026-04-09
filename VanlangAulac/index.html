@@ -12,7 +12,7 @@ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("LỖI CAMERA: Vui lòng chạy trên HTTPS để điện thoại cho phép mở camera!");
 }
 
-// 1. CẢM ỨNG 3D
+// 1. CẢM ỨNG 3D VÀ HÌNH ẢNH 2D
 AFRAME.registerComponent('gesture-handler', {
 schema: { enabled: { default: true }, rotationFactor: { default: 5 }, minScale: { default: 0.1 }, maxScale: { default: 8 } },
 init: function () {
@@ -21,8 +21,12 @@ this.handleRotation = this.handleRotation.bind(this);
 this.isVisible = false;
 this.initialScale = this.el.object3D.scale.clone();
 this.scaleFactor = 1;
-this.el.sceneEl.addEventListener("markerFound", (e) => { this.isVisible = true; });
-this.el.sceneEl.addEventListener("markerLost", (e) => { this.isVisible = false; });
+// Bắt sự kiện theo thẻ mẹ để đảm bảo cảm ứng hoạt động chuẩn khi tải tĩnh
+const targetEl = this.el.closest('[mindar-image-target]');
+if (targetEl) {
+    targetEl.addEventListener("targetFound", () => { this.isVisible = true; });
+    targetEl.addEventListener("targetLost", () => { this.isVisible = false; });
+}
 },
 update: function () {
 this.el.sceneEl.addEventListener("onefingermove", this.handleRotation);
@@ -71,7 +75,7 @@ this.startSpread = spread;
 }
 });
 
-// 2. TÁCH NỀN VIDEO 
+// 2. TÁCH NỀN VIDEO (Nguyên gốc mượt mà)
 AFRAME.registerComponent('blue-chromakey', {
 schema: {
 src: {type: 'selector'},
@@ -139,14 +143,17 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 .stone-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #5d4037; }
 .row-btn { display: flex; gap: 10px; width: 100%; }
 
+/* Thiết kế Nút chức năng Thẻ 14 & 15 gọn gàng, nhỏ nhẹ theo ý bạn */
 #menu-vanlang14 { display: none; position: fixed; right: 20px; bottom: 80px; flex-direction: column; gap: 10px; z-index: 2000; }
-#menu-vanlang15 { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; flex-direction: row; gap: 10px; z-index: 2000; justify-content: center; }
-.small-btn { background-color: rgba(255, 248, 220, 0.9); color: #8B4513; border: 2px solid #8B4513; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px; text-align: center; box-shadow: 2px 2px 0px #8B4513; cursor: pointer; flex: 1; }
+#menu-vanlang15 { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; flex-direction: row; gap: 10px; z-index: 2000; justify-content: center; }
+.small-btn { background-color: rgba(255, 248, 220, 0.95); color: #8B4513; border: 2px solid #8B4513; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 13px; text-align: center; box-shadow: 2px 2px 0px #8B4513; cursor: pointer; flex: 1; white-space: nowrap;}
 .small-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #8B4513; }
 
-#weather-alert { display: none; position: fixed; top: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 20px; font-weight: bold; font-size: 20px; z-index: 2001; }
+#weather-alert { display: none; position: fixed; top: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 20px; font-weight: bold; font-size: 20px; z-index: 2001; text-align: center; }
 
 #back-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #d32f2f; color: white; border-radius: 20px; border: 2px solid white; font-weight: bold; display: none; z-index: 2000; cursor: pointer; }
+
+#custom-alert { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; border: 3px solid #8B4513; color: #8B4513; font-weight: bold; z-index: 10002; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 
 .mindar-ui-overlay { display: none !important; }
 .mindar-ui-loading { display: none !important; }
@@ -167,9 +174,10 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none;
 
 <div id="info-modal">
 <img id="info-content" src="" alt="Thông tin">
-<div style="color:white; margin-top:10px">(Chạm để đóng)</div>
+<div style="color:white; margin-top:10px">Chạm để đóng</div>
 </div>
 
+<div id="custom-alert">Dữ liệu đang được cập nhật <br><br><span style="font-size:14px; color:gray;">Chạm để đóng</span></div>
 <div id="weather-alert">Nhiệt đới ẩm gió mùa</div>
 
 <div id="menu-vanlang1">
@@ -305,13 +313,13 @@ const menuVanLang1 = document.getElementById('menu-vanlang1');
 const menuVanLang14 = document.getElementById('menu-vanlang14');
 const menuVanLang15 = document.getElementById('menu-vanlang15');
 const weatherAlert = document.getElementById('weather-alert');
+const customAlert = document.getElementById('custom-alert');
 
 let activeIdx = -1; 
 let isAudioPlaying = false;
 let isVideoMode = true; 
 let currentVideo = null; 
-let currentAudioId = '';
-let currentInfoId = '';
+let activeSubMenu = ''; // Biến để theo dõi trạng thái thẻ 14, 15
 
 document.getElementById('start-btn').addEventListener('click', () => {
     startScreen.style.display = 'none';
@@ -343,6 +351,7 @@ function resetAll() {
     menuVanLang15.style.display = 'none';
     infoModal.style.display = 'none';
     weatherAlert.style.display = 'none';
+    customAlert.style.display = 'none';
     
     ['plane-vuahung', 'plane-lachau', 'plane-lactuong', 'plane-bochinh'].forEach(id => { document.getElementById(id).setAttribute('visible', 'false'); });
     
@@ -363,8 +372,7 @@ function resetAll() {
     audioBtn.innerText = '🔊';
     isVideoMode = true;
     currentVideo = null;
-    currentAudioId = '';
-    currentInfoId = '';
+    activeSubMenu = '';
 }
 
 function stopAllMedia() {
@@ -385,9 +393,6 @@ for (let i = 0; i < 15; i++) {
         activeIdx = i;
         infoBtn.style.display = 'flex';
         audioBtn.style.display = 'flex';
-        
-        currentAudioId = `a-vanlang${i + 1}`;
-        currentInfoId = `ttvanlang${i + 1}`;
 
         if (i === 3) {
             gameBtn.style.display = 'flex';
@@ -415,8 +420,7 @@ for (let i = 0; i < 15; i++) {
         } else if (i === 14) {
             menuVanLang15.style.display = 'flex';
             document.getElementById('img-15').setAttribute('visible', 'true');
-            currentAudioId = 'a-15a';
-            currentInfoId = 'ttvanlang15a';
+            activeSubMenu = '15a';
         }
     });
 
@@ -448,6 +452,7 @@ window.selectSubVideo = function(charName) {
     }
 }
 
+// CHỨC NĂNG THẺ 14
 window.showWeather = function() {
     weatherAlert.style.display = 'block';
     setTimeout(() => { weatherAlert.style.display = 'none'; }, 3000);
@@ -460,28 +465,26 @@ window.showMinerals = function() {
     document.getElementById('img-14b').setAttribute('visible', 'true');
 }
 
+// CHỨC NĂNG THẺ 15
 window.selectCulture = function(type) {
     menuVanLang15.style.display = 'none';
     backBtn.style.display = 'block';
     document.getElementById('img-15').setAttribute('visible', 'false');
     
-    if (isAudioPlaying) {
-        let currentAudio = document.getElementById(currentAudioId);
-        if (currentAudio) currentAudio.pause();
-    }
+    // Tạm dừng nhạc nền thẻ gốc
+    let currentAudio = document.getElementById(`a-${activeSubMenu}`);
+    if (currentAudio) currentAudio.pause();
 
     if (type === 'phungnguyen') {
         document.getElementById('model-15b').setAttribute('visible', 'true');
-        currentAudioId = 'a-15b';
-        currentInfoId = 'ttvanlang15b';
+        activeSubMenu = '15b';
     } else {
         document.getElementById('model-15c').setAttribute('visible', 'true');
-        currentAudioId = 'a-15c';
-        currentInfoId = 'ttvanlang15c';
+        activeSubMenu = '15c';
     }
 
     if (isAudioPlaying) {
-        let newAudio = document.getElementById(currentAudioId);
+        let newAudio = document.getElementById(`a-${activeSubMenu}`);
         if (newAudio) newAudio.play().catch(()=>{});
     }
 }
@@ -504,15 +507,14 @@ window.goBack = function() {
         document.getElementById('img-15').setAttribute('visible', 'true');
         menuVanLang15.style.display = 'flex';
         
+        let oldAudio = document.getElementById(`a-${activeSubMenu}`);
+        if (oldAudio) oldAudio.pause();
+        
+        activeSubMenu = '15a';
+        
         if (isAudioPlaying) {
-            let currentAudio = document.getElementById(currentAudioId);
-            if (currentAudio) currentAudio.pause();
-        }
-        currentAudioId = 'a-15a';
-        currentInfoId = 'ttvanlang15a';
-        if (isAudioPlaying) {
-            let defaultAudio = document.getElementById(currentAudioId);
-            if (defaultAudio) defaultAudio.play().catch(()=>{});
+            let newAudio = document.getElementById(`a-15a`);
+            if (newAudio) newAudio.play().catch(()=>{});
         }
     }
 }
@@ -552,7 +554,10 @@ audioBtn.addEventListener('click', () => {
     isAudioPlaying = !isAudioPlaying;
     audioBtn.innerText = isAudioPlaying ? '🎵' : '🔊';
 
-    const audioFile = document.getElementById(currentAudioId);
+    let audioId = `a-vanlang${activeIdx + 1}`;
+    if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
+
+    const audioFile = document.getElementById(audioId);
 
     if (isAudioPlaying) {
         if (audioFile) audioFile.play().catch(()=>{});
@@ -565,23 +570,40 @@ audioBtn.addEventListener('click', () => {
 
 infoBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
-    document.getElementById('info-content').src = `./${currentInfoId}.png`;
+    
+    let infoSrc = `./ttvanlang${activeIdx + 1}.png`;
+    if (activeIdx === 14) { infoSrc = `./ttvanlang${activeSubMenu}.png`; }
+    
+    // Check xem có file info chưa (Sắp hoàn thiện)
+    // Để giữ code nguyên gốc của bạn thì tạm thời sẽ hiện ảnh, 
+    // Nếu bạn muốn báo chưa hoàn thiện thì dùng customAlert, nhưng theo code bạn đưa thì không có logic check file tồn tại.
+    // Tạm thời mở modal:
+    document.getElementById('info-content').src = infoSrc;
     infoModal.style.display = 'flex';
     
     if (currentVideo) currentVideo.pause();
-    const audioFile = document.getElementById(currentAudioId);
+    
+    let audioId = `a-vanlang${activeIdx + 1}`;
+    if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
+    const audioFile = document.getElementById(audioId);
     if (audioFile && isAudioPlaying) audioFile.pause();
 });
 
 infoModal.addEventListener('click', () => {
     infoModal.style.display = 'none';
     if (isAudioPlaying) {
-        const audioFile = document.getElementById(currentAudioId);
+        let audioId = `a-vanlang${activeIdx + 1}`;
+        if (activeIdx === 14) { audioId = `a-${activeSubMenu}`; }
+        const audioFile = document.getElementById(audioId);
         if(audioFile) audioFile.play().catch(()=>{});
     }
     if (currentVideo) {
         currentVideo.play().catch(()=>{});
     }
+});
+
+customAlert.addEventListener('click', () => {
+    customAlert.style.display = 'none';
 });
 
 gameBtn.addEventListener('click', () => {

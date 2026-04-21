@@ -219,35 +219,36 @@ vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 </a-scene>
 
 <script>
+// Cập nhật mảng cardConfig để bật `hasInfo: true` cho toàn bộ các thẻ
 const cardConfig = [
-    { type: 'video', id: 'daiviet1', hasInfo: false, hasAudio: false }, 
-    { type: 'video', id: 'daiviet2', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet3', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet4', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet5', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet6', hasInfo: false, hasAudio: false },
-    { type: 'missing', id: null, hasInfo: false, hasAudio: false }, // Thẻ 7: Thiếu video
-    { type: 'video', id: 'daiviet8', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet9', hasInfo: false, hasAudio: false }, 
+    { type: 'video', id: 'daiviet1', hasInfo: true, hasAudio: false }, 
+    { type: 'video', id: 'daiviet2', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet3', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet4', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet5', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet6', hasInfo: true, hasAudio: false },
+    { type: 'missing', id: null, hasInfo: true, hasAudio: false }, // Thẻ 7: Thiếu video nhưng vẫn có thẻ thông tin
+    { type: 'video', id: 'daiviet8', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet9', hasInfo: true, hasAudio: false }, 
     
-    { type: 'special', id: null, hasInfo: false, hasAudio: false },  // Thẻ 10
+    { type: 'special', id: null, hasInfo: true, hasAudio: false },  // Thẻ 10
     
-    { type: 'video', id: 'daiviet11', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet12', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet13', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet14', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet15', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet16', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet17', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet18', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet19', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet20', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet21', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet22', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet23', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet24', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet25', hasInfo: false, hasAudio: false },
-    { type: 'video', id: 'daiviet26', hasInfo: false, hasAudio: false } 
+    { type: 'video', id: 'daiviet11', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet12', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet13', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet14', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet15', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet16', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet17', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet18', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet19', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet20', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet21', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet22', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet23', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet24', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet25', hasInfo: true, hasAudio: false },
+    { type: 'video', id: 'daiviet26', hasInfo: true, hasAudio: false } 
 ];
 
 const startScreen = document.getElementById('start-screen');
@@ -355,7 +356,8 @@ infoBtn.addEventListener('click', () => {
     if (activeIdx === -1) return;
     
     if (cardConfig[activeIdx].hasInfo) {
-        document.getElementById('info-content').src = `./daiviet${activeIdx + 1}.png`;
+        // Cập nhật đường dẫn lấy hình ảnh theo định dạng yêu cầu (ttdaiviet...)
+        document.getElementById('info-content').src = `./ttdaiviet${activeIdx + 1}.png`;
         infoModal.style.display = 'flex';
         
         mainVideo.pause();
